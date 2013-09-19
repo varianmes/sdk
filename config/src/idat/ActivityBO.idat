@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+        <DX_REQUEST>
+            <IMPORT ref_check="false" mode="idat">
+                <ACTIVITY_OBJECT>
+                <!-- Example...
+                    <ROW>
+                        <ACTIVITY></ACTIVITY>
+                        <DESCRIPTION></DESCRIPTION>
+                        <DATA_IN_OUT></DATA_IN_OUT>
+                        <CLASS_OR_PROGRAM></CLASS_OR_PROGRAM>
+                        <EXECUTION_LOCATION></EXECUTION_LOCATION>
+                        <VISIBLE></VISIBLE>
+	                <ACTIVITY_OPTION>
+        	            <ROW>
+                	        <EXEC_UNIT_OPTION>RULE1</EXEC_UNIT_OPTION>
+	                        <SETTING>Value 1</SETTING>
+        	            </ROW>
+                	    <ROW>
+	                        <EXEC_UNIT_OPTION>RULE2</EXEC_UNIT_OPTION>
+        	                <SETTING>Value 2</SETTING>
+                	    </ROW>
+	                </ACTIVITY_OPTION>
+                        <USE_OUTPUT_AS_INPUT></USE_OUTPUT_AS_INPUT>
+                        <SHORT_NAME></SHORT_NAME>
+                        <ENABLED></ENABLED>
+                        <EXECUTION_TYPE></EXECUTION_TYPE>
+                    </ROW>
+                  -->
+            </ACTIVITY_OBJECT>
+        </IMPORT>
+    </DX_REQUEST>

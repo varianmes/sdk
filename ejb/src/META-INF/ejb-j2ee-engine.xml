@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE ejb-j2ee-engine PUBLIC "-//ejb-j2ee-engine.dtd//EN" "ejb-j2ee-engine.dtd">
+<!--
+<ejb-j2ee-engine>
+	<enterprise-beans>
+		<enterprise-bean>
+		         <ejb-name>MyService</ejb-name>       
+		         <jndi-name>vendor/MyService</jndi-name>     
+		</enterprise-bean>
+	</enterprise-beans>	
+</ejb-j2ee-engine>
+-->
