@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DX_REQUEST>
+<IMPORT ref_check="false" mode="idat">
+<SYSTEM_RULE_GROUP_OBJECT>
+		<ROW>
+			<RULE_GROUP>Z_CUSTOM_RULES</RULE_GROUP>
+			<LONG_DESCRIPTION>Varian Custom Rules</LONG_DESCRIPTION>
+			<DESCRIPTION>Z_Varian Custom Rules</DESCRIPTION>
+		</ROW>
+</SYSTEM_RULE_GROUP_OBJECT>
+</IMPORT>
+</DX_REQUEST>

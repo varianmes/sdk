@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?>
-        <DX_REQUEST>
-            <IMPORT ref_check="false" mode="idat">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<DX_REQUEST>
+            <IMPORT mode="idat" ref_check="false">
                 <ACTIVITY_OBJECT>
                 <!-- Example...
                     <ROW>
@@ -26,6 +26,8 @@
                         <EXECUTION_TYPE></EXECUTION_TYPE>
                     </ROW>
                   -->
-            </ACTIVITY_OBJECT>
+            
+    
+        </ACTIVITY_OBJECT>
         </IMPORT>
     </DX_REQUEST>

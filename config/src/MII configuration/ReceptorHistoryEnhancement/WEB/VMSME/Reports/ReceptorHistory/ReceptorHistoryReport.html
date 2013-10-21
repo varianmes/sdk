@@ -1,0 +1,261 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<title>Receptor History Report</title>
+	<link rel="stylesheet" href="../Common/css/Application.css" type="text/css"/>
+	<link rel="stylesheet" type="text/css" href="../../dhtmlxSuite/dhtmlxCombo/codebase/dhtmlxcombo.css"/>
+	<link rel="stylesheet" type="text/css" href="../../dhtmlxSuite/dhtmlxGrid/codebase/dhtmlxgrid.css"/> 
+	<link rel="stylesheet" type="text/css" href="../../dhtmlxSuite/dhtmlxGrid/codebase/skins/dhtmlxgrid_dhx_skyblue.css"/> 
+
+
+	<script type="text/javascript" src="../../dhtmlxSuite/dhtmlxGrid/codebase/dhtmlxcommon.js"></script> 
+	<script type="text/javascript" src="../../dhtmlxSuite/dhtmlxGrid/codebase/dhtmlxgrid.js" ></script> 
+	<script type="text/javascript" src="../../dhtmlxSuite/dhtmlxGrid/codebase/dhtmlxgridcell.js" ></script> 
+	<script type="text/javascript" src="../../dhtmlxSuite/dhtmlxGrid/codebase/ext/dhtmlxgrid_export.js"></script>
+	<script  type="text/javascript" src="../../dhtmlxSuite/dhtmlxGrid/codebase/ext/dhtmlxgrid_srnd.js"></script>
+	<script type="text/javascript"  src="../../dhtmlxSuite/dhtmlxGrid/codebase/ext/dhtmlxgrid_filter.js"></script>
+	<script type="text/javascript" src="../../dhtmlxSuite/dhtmlxGrid/codebase/ext/dhtmlxgrid_splt.js"></script>
+	<script type="text/javascript" src="../../dhtmlxSuite/dhtmlxGrid/codebase/ext/dhtmlxgrid_group.js"></script>	
+	<script  type="text/javascript"  src="../../dhtmlxSuite/dhtmlxGrid/codebase/ext/dhtmlxgrid_nxml.js"></script>
+
+           <script type="text/javascript" src="../Common/jquery/jquery-1.8.3.min.js"></script>
+
+<style type="text/css">
+input#image-button{
+    background: #ccc url('/XMII/CM/VMSME/Reports/ReceptorHistory/Excelexport.png') no-repeat top left;
+
+
+    padding-left: 35px;
+    height: 30px;
+}
+input#normal-button{
+    
+    height: 30px;
+}
+input#print-button{
+    background: #ccc url('/XMII/CM/VMSME/Reports/ReceptorHistory/print_icon.jpg') no-repeat top left;
+
+    padding-left: 35px;
+    height: 30px;
+}
+
+</style>
+
+
+<script type ="text/javascript" language="javascript">
+
+	var recHistGrid;
+
+function getReceptorHistory()
+{
+
+	var EnteredSerial = document.getElementById("InputSerial").value;
+	
+	var validateSerailURL = "/XMII/Illuminator?QueryTemplate=VMSME/Reports/DHR/ValidateSerialNumber&Param.1="+EnteredSerial+"&Content-Type=text/xml"
+	var isValidOP = dhtmlxAjax.getSync(encodeURI(validateSerailURL));
+	//alert(isValidOP .doSerialization());
+	
+	var isValidFlag = isValidOP.xmlDoc.responseXML.getElementsByTagName("ISValid")[0].text;
+	
+	if (isValidFlag == 1)
+	{
+
+		recHistGrid= new dhtmlXGridObject('RecHistGrid');
+		recHistGrid.setImagePath("../../dhtmlxSuite/dhtmlxGrid/codebase/imgs/");
+		recHistGrid.setHeader("SFC,Material,Receptor Type,Customer,Operation,Resource,Activity Code,Comments,NC State,Rework State,Date Time,User ID");
+		//recHistGrid.attachHeader("#text_filter,#text_filter,#text_filter,#text_filter,#text_filter,#text_filter,#text_filter,#text_filter,#text_filter,#text_filter,#text_filter,#text_filter,");
+		recHistGrid.setInitWidths("100,100,100,100,100,100,100,350,50,50,100,100");
+		recHistGrid.setColAlign("left,left,left,left,left,left,left,left,left,left,left,left");
+		recHistGrid.setColTypes("ro,ro,ro,ro,ro,ro,ro,ro,ro,ro,ro,ro");
+		recHistGrid.setColSorting("str,str,str,str,str,str,str,str,str,str,str,str");
+		recHistGrid.init();
+		recHistGrid.setSkin("dhx_skyblue");
+		var recGridURL = encodeURI("http://slmesdev2:50100/XMII/Illuminator?QueryTemplate=VMSME/Reports/ReceptorHistory/GetReceptorHisoryData&param.1="+EnteredSerial+"&Content-Type=text/xml");
+		/* recHistGrid.loadXML(recGridURL,function(){
+				recHistGrid.groupBy(2);
+
+		}); */
+		
+		recHistGrid.loadXML(recGridURL); 
+
+
+
+	}
+	else
+	{
+		alert("Please enter valid Serial number");
+	}
+}
+function OpenSearchComponent()
+{
+
+	var x = window.screen.availWidth/2 - 255;  //subtract half of width
+	var y = window.screen.availHeight/2 - 255; //subtract half of height
+	var serial=$("#InputSerial").val();
+	window.open("../DHR/SearchForSerialNumber.html?glass="+serial+"&sfc=&item=", "SearchComponent", "width=520,height=400,resizable=no,scrollbars=no,status=no,left=" + x + ",top=" + y);
+	
+
+}
+function GetSerialNumFromChild(myVal)
+{
+	document.getElementById('InputSerial').value = myVal;
+}
+function excelExport()
+{
+	recHistGrid.toExcel("http://slmesdev2:50100/grid-excel/generate");
+
+}
+function csvExport()
+{
+	recHistGrid.toExcel("http://slmesdev2:50100/grid-excel/csv");
+}
+function pdfExport()
+{
+	recHistGrid.toPDF("http://slmesdev2:50100/grid-pdf/generate");
+}
+function enableFiltering()
+{
+
+	//***********************************************************
+	$('#groupingGrid').css({opacity: 0.0, visibility: "hidden"}).animate({opacity: 1.0});
+	//***********************************************************
+
+	var EnteredSerial = document.getElementById("InputSerial").value;
+
+	recHistGrid= new dhtmlXGridObject('RecHistGrid');
+	recHistGrid.setImagePath("../../dhtmlxSuite/dhtmlxGrid/codebase/imgs/");
+	recHistGrid.setHeader("SFC,Material,Receptor Type,Customer,Operation,Resource,Activity Code,Comments,NC State,Rework State,Date Time,User ID");
+	recHistGrid.attachHeader("#text_filter,#text_filter,#text_filter,#text_filter,#text_filter,#text_filter,#text_filter,#text_filter,#text_filter,#text_filter,#text_filter,#text_filter,");
+	recHistGrid.setInitWidths("100,100,100,100,100,100,100,350,50,50,100,100");
+	recHistGrid.setColAlign("left,left,left,left,left,left,left,left,left,left,left,left");
+	recHistGrid.setColTypes("ro,ro,ro,ro,ro,ro,ro,ro,ro,ro,ro,ro");
+	recHistGrid.setColSorting("str,str,str,str,str,str,str,str,str,str,str,str");
+	recHistGrid.init();
+	recHistGrid.setSkin("dhx_skyblue");
+	var recGridURL = encodeURI("http://slmesdev2:50100/XMII/Illuminator?QueryTemplate=VMSME/Reports/ReceptorHistory/GetReceptorHisoryData&param.1="+EnteredSerial+"&Content-Type=text/xml");
+	/* recHistGrid.loadXML(recGridURL,function(){
+			recHistGrid.groupBy(2);
+	}); */
+		
+	recHistGrid.loadXML(recGridURL); 
+
+}
+function enableGrouping()
+{
+
+	//***********************************************************
+	$('#groupingGrid').css({opacity: 0.0, visibility: "visible"}).animate({opacity: 1.0});
+	//***********************************************************
+
+	var EnteredSerial = document.getElementById("InputSerial").value;
+
+	recHistGrid= new dhtmlXGridObject('RecHistGrid');
+	recHistGrid.setImagePath("../../dhtmlxSuite/dhtmlxGrid/codebase/imgs/");
+	recHistGrid.setHeader("SFC,Material,Receptor Type,Customer,Operation,Resource,Activity Code,Comments,NC State,Rework State,Date Time,User ID");
+	//recHistGrid.attachHeader("#text_filter,#text_filter,#text_filter,#text_filter,#text_filter,#text_filter,#text_filter,#text_filter,#text_filter,#text_filter,#text_filter,#text_filter,");
+	recHistGrid.setInitWidths("100,100,100,100,100,100,100,350,50,50,100,100");
+	recHistGrid.setColAlign("left,left,left,left,left,left,left,left,left,left,left,left");
+	recHistGrid.setColTypes("ro,ro,ro,ro,ro,ro,ro,ro,ro,ro,ro,ro");
+	recHistGrid.setColSorting("str,str,str,str,str,str,str,str,str,str,str,str");
+	recHistGrid.init();
+	recHistGrid.setSkin("dhx_skyblue");
+	var recGridURL = encodeURI("http://slmesdev2:50100/XMII/Illuminator?QueryTemplate=VMSME/Reports/ReceptorHistory/GetReceptorHisoryData&param.1="+EnteredSerial+"&Content-Type=text/xml");
+	 recHistGrid.loadXML(recGridURL,function(){
+			recHistGrid.groupBy(4);
+	}); 
+		
+	
+}
+function printReceptorHistory()
+{
+
+	recHistGrid.printView();
+
+
+}
+
+</script>
+
+</head>
+
+<body>
+	<div class="header">
+		<div><img class="headerlogo" src="../Common/images/VMS_logo.gif"  height="44px"  width ="350px" alt="Varian logo"/></div>
+	    <div><span class="headerTitle">Receptor History Report</span></div>
+	
+	</div>
+	<div class="content">
+		<div class="whitePanel" >
+	        <table style="position: relative;width:100%;left: 10px;">
+				<tr>
+					<td style="width: 94px">Enter Serial</td>
+					<td style="width:120px" ><input type="text" id ="InputSerial" style="width:100%;"/></td>
+					<td style="width: 30px"><input type="button" value="..." onclick="OpenSearchComponent()"/></td>
+					<td><input type="button" class="Button" id="getRecHistDet" value="Get Details" onclick="getReceptorHistory()"/></td>
+				</tr>
+			</table>
+		</div>
+		<div><br/></div>
+
+	    <div class="whitePanel" style="width:100%;"> 
+		<div style=" width: 810px;   float: left;"> 
+			 <input type="submit" value="Get as Excel" id="image-button"  onclick="excelExport();"/>  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			<input type="submit" value="Get as CSV" id="image-button"  onclick="csvExport();"/> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			<input type="submit" value="Print" id="print-button"  onclick="printReceptorHistory();"/> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			<input type="submit" value="Enable Filtering "   id="normal-button"  onclick="enableFiltering();"/>  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			<input type="submit" value="Enable Grouping "    id="normal-button"  onclick="enableGrouping();"/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		
+			<!-- <input type="submit" value="Get as PDF" id="image-button"  onclick="pdfExport();"/> -->
+		</div>
+		<div  id="groupingGrid"  style=" margin-left: 810px; visibility:hidden">
+			
+			        	     <label>Select Column</label>&nbsp;
+			          	 	 <select id="selColumnOPT">
+					          <option value="0">SFC</option>
+  						 <option value="1">Material</option>
+ 						 <option value="2">Receptor Type</option>
+ 						 <option value="3">Customer</option>
+					            <option value="4">Operation</option>
+  						 <option value="5">Resource</option>
+ 						 <option value="6">Activity Code</option>
+ 						 <option value="7">Comments</option>					          
+						<option value="8">NC State</option>
+  						 <option value="9">Rework State</option>
+ 						 <option value="10">Date Time</option>
+ 						 <option value="11">User  ID</option>
+			           		 </select>
+			         	<input type="button"  id="regroupButID" name="regroup" value="Regroup"/>
+			</div>
+		<br/><br/>
+	  	  <div style="width:1400px;height:800px" id="RecHistGrid" ></div> 
+	
+	    </div>
+	
+		<!--<div id="logarea" style="background-color:lightgrey;height:218px;width:250px; overflow:auto"></div>-->
+	
+	    <div class="footer">
+			<div class="copyright">	&copy; 1999-2013 Varian Medical Systems, Inc. All rights reserved.</div>
+		</div>
+	 </div>
+<script type="text/javascript" language="javascript">
+	$("#InputSerial").keyup(function (e) {
+	    if (e.keyCode == 13) {
+	       OpenSearchComponent();
+	    }
+	});
+	
+$("#regroupButID").click(function() {
+
+	
+	    var selColumnVal =  $("#selColumnOPT").val();
+	     recHistGrid.groupBy(selColumnVal);
+		
+
+		
+	});	
+</script>	
+	 
+</body>
+</html>
