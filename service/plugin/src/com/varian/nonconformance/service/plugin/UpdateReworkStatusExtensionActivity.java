@@ -52,49 +52,49 @@ public class UpdateReworkStatusExtensionActivity implements
 		findsysrulereq.setRuleName(ruleName);
 		SystemRuleSetting sysrulesetting1 = systemRuleService.findSystemRuleSetting(findsysrulereq);
 		sysruleval =  Boolean.valueOf(sysrulesetting1.getSetting().toString());
-		if (sysruleval == true){
+			if (sysruleval == true){
+				
+				//process this logic when user tries to close a NC code 
+				if(dto.getNcStatus().name().equals("CLOSED")){	
+			  	
+				String ncref = dto.getNcRef();
+				//get information from nc ref
+				String parentNCref = null;
+				String ncCategory = null;
+			    String failureId = null;
+			   
+				ReadNCRequest ncreq = new ReadNCRequest(ncref);
+				ReadNCResponse ncResponse = nCProductionService.readNC(ncreq);
+				parentNCref = ncResponse.getParentNCRef();
+				ncCategory = ncResponse.getNcCodeCategory().value();
 		
-		//process this logic when user tries to close a NC code 
-		if(dto.getNcStatus().name().equals("CLOSED")){	
-	  	
-		String ncref = dto.getNcRef();
-		//get information from nc ref
-		String parentNCref = null;
-		String ncCategory = null;
-	    String failureId = null;
-	   
-		ReadNCRequest ncreq = new ReadNCRequest(ncref);
-		ReadNCResponse ncResponse = nCProductionService.readNC(ncreq);
-		parentNCref = ncResponse.getParentNCRef();
-		ncCategory = ncResponse.getNcCodeCategory().value();
-
-		//get the exact nc code
-		ObjectReference objref = new ObjectReference();
-		objref.setRef(ncResponse.getNcCodeRef());
-		NcCodeBasicConfiguration ncCodeResp = ncCodeConfigurationService.findNcCodeByRef(objref);
-		String ncCode = ncCodeResp.getNcCode();
-		//validate if this code is a tertiary NC code
-		
-	    if(parentNCref != null && !ncCategory.equals("FAILURE") && !ncCategory.equals("DEFECT") && ncCode.equals("LOG_REWORK_STATE")){   
-	        	failureId = ncResponse.getFailureId();         
-				Connection connect = DataSourceConnection.getSQLConnection();
-	    		PreparedStatement pstmt;
-	    		String setFailureId= ("UPDATE NC_DATA SET FAILURE_ID = '"+failureId+"' WHERE HANDLE = ?");
-				pstmt = connect.prepareStatement(setFailureId);
-				pstmt.setString(1, parentNCref);
-			try
-			{
-				pstmt.executeUpdate();
-				connect.close();
-			} 
-			catch (Exception updatefailed){
-	           	throw new BusinessException(20222);		
-			}
-	    			
-		}
-		}
-		}
-	    }
+				//get the exact nc code
+				ObjectReference objref = new ObjectReference();
+				objref.setRef(ncResponse.getNcCodeRef());
+				NcCodeBasicConfiguration ncCodeResp = ncCodeConfigurationService.findNcCodeByRef(objref);
+				String ncCode = ncCodeResp.getNcCode();
+				//validate if this code is a tertiary NC code
+				
+					    if(parentNCref != null && !ncCategory.equals("FAILURE") && !ncCategory.equals("DEFECT") && ncCode.equals("LOG_REWORK_STATE")){   
+					        	failureId = ncResponse.getFailureId();         
+								Connection connect = DataSourceConnection.getSQLConnection();
+					    		PreparedStatement pstmt;
+					    		String setFailureId= ("UPDATE NC_DATA SET FAILURE_ID = '"+failureId+"' WHERE HANDLE = ?");
+								pstmt = connect.prepareStatement(setFailureId);
+								pstmt.setString(1, parentNCref);
+							try
+							{
+								pstmt.executeUpdate();
+								connect.close();
+							} 
+							catch (Exception updatefailed){
+					           	throw new BusinessException(20222);		
+							}
+				    			
+				    	}
+					}
+				}
+		    }
 		//}
 
 		/**

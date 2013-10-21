@@ -16,6 +16,7 @@ import com.visiprise.frame.service.ext.ActivityInterface;
 
 /**
  * @author vmurthy
+ * 
  *
  */
 public class ValidateReworkStatusExtensionActivity implements
@@ -54,10 +55,10 @@ public class ValidateReworkStatusExtensionActivity implements
 			 failureId =  dto.getFailureId();
 			 	if(failureId == null){
 			 			throw new BusinessException(20220);	
-			 	} else if (!failureId.equalsIgnoreCase("PASS")){
-			 			if (!failureId.equalsIgnoreCase("FAIL")){
+			 	} else if ( ! ( failureId.equalsIgnoreCase("PASS") || failureId.equalsIgnoreCase("FAIL")) ){
+			 			
 			 			throw new BusinessException(20220);
-	    		}
+	    		
 			 	}
 		 	}
 		}

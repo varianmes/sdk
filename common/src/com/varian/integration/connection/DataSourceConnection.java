@@ -29,15 +29,7 @@ public class DataSourceConnection {
 		return baseDS;
 	}
 	
-	public static Connection getConnection(){
-		BaseDataSource baseDS = new BaseDataSource();
-		Connection conn;
-		//The init method initializes with data source
-		baseDS.init("jdbc/wipPool",true);
-		conn = baseDS.getDBConnection();
-		return conn;	
-	}
-	
+
 	public static Connection getSQLConnection(){
 		BaseDataSource baseDS = new BaseDataSource();
 		Connection conn;
@@ -48,8 +40,8 @@ public class DataSourceConnection {
 	}
 	
    @SuppressWarnings("finally")
-public Data executedbquery(DynamicQuery db){
-	   con = getConnection();
+   public Data executedbquery(DynamicQuery db){
+	   con = getSQLConnection();
 	  
 	   try{
 		st=con.createStatement();
