@@ -41,11 +41,5 @@
         <property name="executionOrder" value="100"/>
     </service>
 
-    <service name="fsfs" parent="ExtensionConfigurator" template="false">
-        <property name="serviceReference" service-ref="NCProductionService"/>
-        <property name="methodName" value="createNC"/>
-        <property name="extensionClass" value="com.varian.nonconformance.service.plugin.ExtensionActivity"/>
-        <property name="activityType" value="PRE"/>
-        <property name="executionOrder" value="100"/>
-    </service>
+ 
 </service-config>
