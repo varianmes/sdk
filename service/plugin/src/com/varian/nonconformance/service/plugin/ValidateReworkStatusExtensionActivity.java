@@ -33,7 +33,7 @@ public class ValidateReworkStatusExtensionActivity implements
 		// TODO Auto-generated method stub
 		initServices();
 		boolean sysruleval = false;
-		String ruleName = "Z_FAILURE_ID_VALIDATE_ON_OFF";
+		String ruleName = "Z_REC_HIST_VALIDATE_ON_OFF";
 		FindSystemRuleSettingRequest findsysrulereq = new FindSystemRuleSettingRequest();
 		findsysrulereq.setRuleName(ruleName);
 		SystemRuleSetting sysrulesetting1 = systemRuleService.findSystemRuleSetting(findsysrulereq);
