@@ -41,6 +41,18 @@
                 <ENABLED>true</ENABLED>
                 <EXECUTION_TYPE>V</EXECUTION_TYPE>
             </ROW>
+			<ROW>
+                <ACTIVITY>Z_RELQTYCHECKHOOK</ACTIVITY>
+                <DESCRIPTION>I18N[Z_RELQTYCHECKHOOK.activity.DESC]</DESCRIPTION>
+                <DATA_IN_OUT>0</DATA_IN_OUT>
+                <CLASS_OR_PROGRAM>com.varian.hook.ReleaseQtyCheckHook</CLASS_OR_PROGRAM>
+                <EXECUTION_LOCATION>S</EXECUTION_LOCATION>
+                <VISIBLE>false</VISIBLE>
+                <USE_OUTPUT_AS_INPUT>false</USE_OUTPUT_AS_INPUT>
+                <SHORT_NAME>Z_RQCH</SHORT_NAME>
+                <ENABLED>true</ENABLED>
+                <EXECUTION_TYPE>V</EXECUTION_TYPE>
+            </ROW>
         </ACTIVITY_OBJECT>
         </IMPORT>
     </DX_REQUEST>
