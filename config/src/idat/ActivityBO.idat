@@ -28,6 +28,19 @@
                   -->
             
     
+        
+            <ROW>
+                <ACTIVITY>ZNC520</ACTIVITY>
+                <DESCRIPTION>I18N[ZNC520.activity.DESC]</DESCRIPTION>
+                <DATA_IN_OUT>0</DATA_IN_OUT>
+                <CLASS_OR_PROGRAM>com.varian.hook.CheckOpenNCsHook</CLASS_OR_PROGRAM>
+                <EXECUTION_LOCATION>S</EXECUTION_LOCATION>
+                <VISIBLE>false</VISIBLE>
+                <USE_OUTPUT_AS_INPUT>false</USE_OUTPUT_AS_INPUT>
+                <SHORT_NAME>ZNC520</SHORT_NAME>
+                <ENABLED>true</ENABLED>
+                <EXECUTION_TYPE>V</EXECUTION_TYPE>
+            </ROW>
         </ACTIVITY_OBJECT>
         </IMPORT>
     </DX_REQUEST>
