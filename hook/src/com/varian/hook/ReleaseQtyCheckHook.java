@@ -41,26 +41,30 @@ public class ReleaseQtyCheckHook implements
 		findsysrulereq1.setRuleName(ruleName1);
 		SystemRuleSetting sysrulesetting1 = systemRuleService.findSystemRuleSetting(findsysrulereq1);
 		sysruleval1 =  Boolean.valueOf(sysrulesetting1.getSetting().toString());		
-		if(sysruleval1 == true){
+		if(sysruleval1){
 			FindSystemRuleSettingRequest findsysrulereq2 = new FindSystemRuleSettingRequest();
 			findsysrulereq2.setRuleName(ruleName2);
 			SystemRuleSetting sysrulesetting2 = systemRuleService.findSystemRuleSetting(findsysrulereq2);
 			try {
-			sysruleval2 = Integer.parseInt(sysrulesetting2.getSetting().toString());
-			if (sysruleval2 > 0){
-			List<AdditionalInfoList> sfcList = dto.getAdditionalInfoList();
-			if (sfcList.size() > sysruleval2) {	    	
-	    	throw new OrderReleaseQtyException(20102,Integer.toString(sysruleval2));
-			}	
-			} else {
-				throw new OrderReleaseQtyException (20103,Integer.toString(sysruleval2));	
-			}
+				
+				sysruleval2 = Integer.parseInt(sysrulesetting2.getSetting().toString());
+				if (sysruleval2 > 0)
+				{
+					List<AdditionalInfoList> sfcList = dto.getAdditionalInfoList();
+					if (sfcList.size() > sysruleval2) {	    	
+						throw new OrderReleaseQtyException(20102,Integer.toString(sysruleval2));
+					}	
+				} 
+				else 
+				{
+					throw new OrderReleaseQtyException (20103,Integer.toString(sysruleval2));	
+				}
 			}
 			
 			catch (Exception e){
-				throw new OrderReleaseQtyException (20103,Integer.toString(sysruleval2));
+				throw new OrderReleaseQtyException (20102,Integer.toString(sysruleval2));
 			}
-			}
+		}
 	}
 
 
