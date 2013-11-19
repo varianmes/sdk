@@ -45,9 +45,12 @@ public class ReleaseQtyCheckHook implements
 			FindSystemRuleSettingRequest findsysrulereq2 = new FindSystemRuleSettingRequest();
 			findsysrulereq2.setRuleName(ruleName2);
 			SystemRuleSetting sysrulesetting2 = systemRuleService.findSystemRuleSetting(findsysrulereq2);
-			try {
-				
+			try {				
 				sysruleval2 = Integer.parseInt(sysrulesetting2.getSetting().toString());
+				}
+			catch (Exception e){
+				throw new OrderReleaseQtyException (20103,Integer.toString(sysruleval2));
+					}
 				if (sysruleval2 > 0)
 				{
 					List<AdditionalInfoList> sfcList = dto.getAdditionalInfoList();
@@ -55,17 +58,16 @@ public class ReleaseQtyCheckHook implements
 						throw new OrderReleaseQtyException(20102,Integer.toString(sysruleval2));
 					}	
 				} 
+		
 				else 
 				{
 					throw new OrderReleaseQtyException (20103,Integer.toString(sysruleval2));	
 				}
-			}
 			
-			catch (Exception e){
-				throw new OrderReleaseQtyException (20102,Integer.toString(sysruleval2));
 			}
+		
 		}
-	}
+	
 
 
 	/*
