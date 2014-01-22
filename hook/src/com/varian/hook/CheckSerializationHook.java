@@ -53,7 +53,7 @@ public class CheckSerializationHook implements
 		ObjectReference operRef = new ObjectReference(operBo);
 		OperationKeyData operKeyData = operationConfigurationService.findOperationKeyDataByRef(operRef);
 		String operation = operKeyData.getOperation();
-		checkforSerial(sfcBO, operation, sfcnumber);		
+		checkforSerial(sfcBO, operation, sfcnumber,"start");		
 	}
 
 	/*
@@ -70,7 +70,7 @@ public class CheckSerializationHook implements
 		ObjectReference operRef = new ObjectReference(operBo);
 		OperationKeyData operKeyData = operationConfigurationService.findOperationKeyDataByRef(operRef);
 		String operation = operKeyData.getOperation();
-		checkforSerial(sfcBO, operation, sfcnumber);
+		checkforSerial(sfcBO, operation, sfcnumber, "precomplete");
 	}
 	
 	public void execute(PostCompleteHookDTO dto) throws Exception {
@@ -83,10 +83,10 @@ public class CheckSerializationHook implements
 		ObjectReference operRef = new ObjectReference(operBo);
 		OperationKeyData operKeyData = operationConfigurationService.findOperationKeyDataByRef(operRef);
 		String operation = operKeyData.getOperation();
-		checkforSerial(sfcBO, operation, sfcnumber);
+		checkforSerial(sfcBO, operation, sfcnumber,"postcomplete");
 	}
 	
-	public void checkforSerial(String sfcBO,String operation,String sfcnumber) throws Exception {
+	public void checkforSerial(String sfcBO,String operation,String sfcnumber,String trigger) throws Exception {
 		int count = 0;
 		Data parametricData = null;
 		Data queryData = null;
@@ -113,7 +113,7 @@ public class CheckSerializationHook implements
 				throw new SerializationMissingException(20107,sfcnumber);	
 			}
 		} else {
-			if (operation.equals("FINAL_TEST") || operation.equals("FINAL_TEST_NO_HIPOT")){
+			if (trigger.equals("start") &&(operation.equals("FINAL_TEST") || operation.equals("FINAL_TEST_NO_HIPOT"))){
 				String prefix = sfcnumber.substring(0, Math.min(sfcnumber.length(), 3));
 				if (!prefix.equals("TR-")){
 					throw new InvalidSerialFormatException(20108,sfcnumber);
