@@ -20,7 +20,7 @@ import com.visiprise.frame.service.ext.ActivityInterface;
  * @author vmurthy
  *
  */
-public class ValidateSfcForTR implements ActivityInterface<CompleteHookDTO> {
+public class CheckTRatComplete implements ActivityInterface<CompleteHookDTO> {
 
 	private static final String SFC_STATE_SERVICE = "SfcStateService";
 	private static final String COM_SAP_ME_PRODUCTION = "com.sap.me.production";
@@ -63,7 +63,7 @@ public class ValidateSfcForTR implements ActivityInterface<CompleteHookDTO> {
 		if (count == 0) {						
 			throw new InvalidSerialFormatException(20107,sfcNumber);		
 		} else {
-			if (prefix.equals("TR-") || prefix.length()<3){	
+			if (prefix.equals("TR-") || sfcNumber.length()<4){	
 				throw new InvalidSerialFormatException(20109,sfcNumber);	
 			} else {
 				String onetwo = prefix.substring(0,2);

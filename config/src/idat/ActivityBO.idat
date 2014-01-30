@@ -2,33 +2,6 @@
 <DX_REQUEST>
             <IMPORT mode="idat" ref_check="false">
                 <ACTIVITY_OBJECT>
-                <!-- Example...
-                    <ROW>
-                        <ACTIVITY></ACTIVITY>
-                        <DESCRIPTION></DESCRIPTION>
-                        <DATA_IN_OUT></DATA_IN_OUT>
-                        <CLASS_OR_PROGRAM></CLASS_OR_PROGRAM>
-                        <EXECUTION_LOCATION></EXECUTION_LOCATION>
-                        <VISIBLE></VISIBLE>
-	                <ACTIVITY_OPTION>
-        	            <ROW>
-                	        <EXEC_UNIT_OPTION>RULE1</EXEC_UNIT_OPTION>
-	                        <SETTING>Value 1</SETTING>
-        	            </ROW>
-                	    <ROW>
-	                        <EXEC_UNIT_OPTION>RULE2</EXEC_UNIT_OPTION>
-        	                <SETTING>Value 2</SETTING>
-                	    </ROW>
-	                </ACTIVITY_OPTION>
-                        <USE_OUTPUT_AS_INPUT></USE_OUTPUT_AS_INPUT>
-                        <SHORT_NAME></SHORT_NAME>
-                        <ENABLED></ENABLED>
-                        <EXECUTION_TYPE></EXECUTION_TYPE>
-                    </ROW>
-                  -->
-            
-    
-        
             <ROW>
                 <ACTIVITY>ZNC520</ACTIVITY>
                 <DESCRIPTION>I18N[ZNC520.activity.DESC]</DESCRIPTION>
@@ -54,26 +27,51 @@
                 <EXECUTION_TYPE>V</EXECUTION_TYPE>
             </ROW>
 			<ROW>
-                <ACTIVITY>Z_CHKSERIALHOOK</ACTIVITY>
-                <DESCRIPTION>I18N[Z_CHKSERIALHOOK.activity.DESC]</DESCRIPTION>
+                <ACTIVITY>Z_CHK_FM_START</ACTIVITY>
+                <DESCRIPTION>I18N[Z_CHK_FM_START.activity.DESC]</DESCRIPTION>
                 <DATA_IN_OUT>0</DATA_IN_OUT>
-                <CLASS_OR_PROGRAM>com.varian.hook.CheckSerializationHook</CLASS_OR_PROGRAM>
+                <CLASS_OR_PROGRAM>com.varian.hook.CheckFMatStart</CLASS_OR_PROGRAM>
                 <EXECUTION_LOCATION>S</EXECUTION_LOCATION>
                 <VISIBLE>false</VISIBLE>
                 <USE_OUTPUT_AS_INPUT>false</USE_OUTPUT_AS_INPUT>
-                <SHORT_NAME>Z_CSH</SHORT_NAME>
+                <SHORT_NAME>Z_CFMS</SHORT_NAME>
                 <ENABLED>true</ENABLED>
                 <EXECUTION_TYPE>V</EXECUTION_TYPE>
             </ROW>
-			<ROW>
-                <ACTIVITY>Z_TR_SERIAL_CHECK</ACTIVITY>
-                <DESCRIPTION>I18N[Z_TR_SERIAL_CHECK.activity.DESC]</DESCRIPTION>
+            <ROW>
+                <ACTIVITY>Z_CHK_UR_START</ACTIVITY>
+                <DESCRIPTION>I18N[Z_CHK_UR_START.activity.DESC]</DESCRIPTION>
                 <DATA_IN_OUT>0</DATA_IN_OUT>
-                <CLASS_OR_PROGRAM>com.varian.hook.ValidateSfcForTR</CLASS_OR_PROGRAM>
+                <CLASS_OR_PROGRAM>com.varian.hook.CheckURatStart</CLASS_OR_PROGRAM>
                 <EXECUTION_LOCATION>S</EXECUTION_LOCATION>
                 <VISIBLE>false</VISIBLE>
                 <USE_OUTPUT_AS_INPUT>false</USE_OUTPUT_AS_INPUT>
-                <SHORT_NAME>Z_TR_SN</SHORT_NAME>
+                <SHORT_NAME>Z_CURS</SHORT_NAME>
+                <ENABLED>true</ENABLED>
+                <EXECUTION_TYPE>V</EXECUTION_TYPE>
+            </ROW>
+            <ROW>
+                <ACTIVITY>Z_CHK_TR_START</ACTIVITY>
+                <DESCRIPTION>I18N[Z_CHK_TR_START.activity.DESC]</DESCRIPTION>
+                <DATA_IN_OUT>0</DATA_IN_OUT>
+                <CLASS_OR_PROGRAM>com.varian.hook.CheckTRatStart</CLASS_OR_PROGRAM>
+                <EXECUTION_LOCATION>S</EXECUTION_LOCATION>
+                <VISIBLE>false</VISIBLE>
+                <USE_OUTPUT_AS_INPUT>false</USE_OUTPUT_AS_INPUT>
+                <SHORT_NAME>Z_CTRS</SHORT_NAME>
+                <ENABLED>true</ENABLED>
+                <EXECUTION_TYPE>V</EXECUTION_TYPE>
+            </ROW>
+        
+            <ROW>
+                <ACTIVITY>Z_CHK_TR_COMPLETE</ACTIVITY>
+                <DESCRIPTION>I18N[Z_CHK_TR_COMPLETE.activity.DESC]</DESCRIPTION>
+                <DATA_IN_OUT>0</DATA_IN_OUT>
+                <CLASS_OR_PROGRAM>com.varian.hook.CheckTRatComplete</CLASS_OR_PROGRAM>
+                <EXECUTION_LOCATION>S</EXECUTION_LOCATION>
+                <VISIBLE>false</VISIBLE>
+                <USE_OUTPUT_AS_INPUT>false</USE_OUTPUT_AS_INPUT>
+                <SHORT_NAME>Z_CTRC</SHORT_NAME>
                 <ENABLED>true</ENABLED>
                 <EXECUTION_TYPE>V</EXECUTION_TYPE>
             </ROW>
