@@ -163,7 +163,8 @@ public class VisualStatusIndicatorPlugin extends BasePodPlugin implements SfcCha
 		while (sfcStepIterator.hasNext()){
 		SfcStep sfcStepdetail = (SfcStep) sfcStepIterator.next();
 		String inWorkOper = sfcStepdetail.getOperationRef();
-		String currOpRefHash = currentOpRef.substring(0,currentOpRef.length()-1)+ "#";	
+		 String currOpRefHash = currentOpRef.substring(0,currentOpRef.lastIndexOf(",")+1)+ "#";
+		//String currOpRefHash = currentOpRef.substring(0,currentOpRef.length()-1)+ "#";	
 		if (inWorkOper.equals(currOpRefHash)){
 			userRef = sfcStepdetail.getUserRef();	
 		}
@@ -392,7 +393,8 @@ public class VisualStatusIndicatorPlugin extends BasePodPlugin implements SfcCha
 			String toolGrpref =  toolGrprefList.get(0);				
 			Data queryData = null;
 			String attachmentRef = null;		
-			String currOpRefHash = currentOpRef.substring(0,currentOpRef.length()-1)+ "#";	
+			//String currOpRefHash = currentOpRef.substring(0,currentOpRef.length()-1)+ "#";	
+			 String currOpRefHash = currentOpRef.substring(0,currentOpRef.lastIndexOf(",")+1)+ "#";
 			SystemBase sysBase = SystemBase.createDefaultSystemBase();
 			DynamicQuery selAttachmentBo = DynamicQueryFactory.newInstance();	
 			selAttachmentBo.append("select ATTACHMENT_BO from attached where "+
