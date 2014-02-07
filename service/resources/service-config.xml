@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE service-config PUBLIC "-//SAP Manufacturing Execution//DTD ME Service Configuration 1.0//EN" "http://www.visiprise.com/dtd/service-config.dtd">
 <service-config moduleId="com.varian.services" partial="false">
+    <import moduleId="com.sap.me.production" service="AssemblyDataService"/>
     <import moduleId="com.sap.me.extension" service="ExtensionConfigurator"/>
     <import moduleId="com.sap.me.nonconformance" service="NCProductionService"/>
 
@@ -26,4 +27,12 @@
     -->    
 
  
+
+    <service name="ValidateAssemblyFields" parent="ExtensionConfigurator" template="false">
+        <property name="serviceReference" service-ref="AssemblyDataService"/>
+        <property name="methodName" value="validateAssemblyFields"/>
+        <property name="extensionClass" value="com.varian.production.service.plugin.ValidateAssemblyFieldsExtensionActivity"/>
+        <property name="activityType" value="PRE"/>
+        <property name="executionOrder" value="100"/>
+    </service>
 </service-config>
