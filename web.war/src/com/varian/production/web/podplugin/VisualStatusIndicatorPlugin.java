@@ -21,6 +21,10 @@ import com.sap.me.frame.SystemBase;
 import com.sap.me.frame.domain.BusinessException;
 import com.sap.me.frame.jdbc.DynamicQuery;
 import com.sap.me.frame.jdbc.DynamicQueryFactory;
+import com.sap.me.nonconformance.FindNCsBySFCRequest;
+import com.sap.me.nonconformance.FindNCsBySFCResponse;
+import com.sap.me.nonconformance.NCStatus;
+import com.sap.me.nonconformance.ReadNCResponse;
 import com.sap.me.plant.ResourceBOHandle;
 import com.sap.me.plant.ResourceKeyData;
 import com.sap.me.plant.WorkCenterBOHandle;
@@ -65,11 +69,13 @@ import com.sap.me.productdefinition.AttachmentConfigurationServiceInterface;
 import com.sap.me.tooling.ToolLogServiceInterface;
 import com.sap.me.production.RetrieveComponentsServiceInterface;
 import com.sap.me.productdefinition.WorkInstructionConfigurationServiceInterface;
-
+import com.sap.me.nonconformance.NCProductionServiceInterface;
 
 public class VisualStatusIndicatorPlugin extends BasePodPlugin implements SfcChangeListenerInterface,RefreshWorklistListenerInterface {
 
-    private static final String WORK_INSTRUCTION_CONFIGURATION_SERVICE = "WorkInstructionConfigurationService";
+    private static final String NCPRODUCTION_SERVICE = "NCProductionService";
+	private static final String COM_SAP_ME_NONCONFORMANCE = "com.sap.me.nonconformance";
+	private static final String WORK_INSTRUCTION_CONFIGURATION_SERVICE = "WorkInstructionConfigurationService";
 	private static final String RETRIEVE_COMPONENTS_SERVICE = "RetrieveComponentsService";
 	private static final String TOOL_LOG_SERVICE = "ToolLogService";
 	private static final String COM_SAP_ME_TOOLING = "com.sap.me.tooling";
@@ -99,7 +105,9 @@ public class VisualStatusIndicatorPlugin extends BasePodPlugin implements SfcCha
     private String assemblystatus =  null;
     private String workInststate = null;
 	private String workInststatus = null;
-	private String completeStatus = null;    
+	private String ncstate = null;
+	private String ncStatus = null;
+	//private String completeStatus = null;    
 	private String currResref = null;
     private String currOpRef= null;
     private SfcStateServiceInterface sfcStateService;
@@ -111,7 +119,9 @@ public class VisualStatusIndicatorPlugin extends BasePodPlugin implements SfcCha
 	private WorkInstructionConfigurationServiceInterface workInstructionConfigurationService;
 	String[] columnDefs = new String[] {};
 	String[] listColumnNames = new String[] {};
+	private NCProductionServiceInterface nCProductionService;
 	
+
 	@Override
 	public void beforeLoad() throws Exception {
 		TableConfigurator table = (TableConfigurator) FacesUtility.resolveExpression("#{sfcStatusTableBeanConfigurator}");
@@ -133,12 +143,14 @@ public class VisualStatusIndicatorPlugin extends BasePodPlugin implements SfcCha
 	public void setStartStatus(String startStatus) {
 		this.startStatus = startStatus;
 	}
+	/*
 	public String getCompleteStatus() {
 		return completeStatus;
 	}
 	public void setCompleteStatus(String completeStatus) {
 		this.completeStatus = completeStatus;
 	}
+	*/
 	public String getWorkInststatus() {
 		return workInststatus;
 	}
@@ -493,7 +505,58 @@ public class VisualStatusIndicatorPlugin extends BasePodPlugin implements SfcCha
 		
 		return buyoffstate;
 	}
+	
+	
+	public void setNcStatus(String ncStatus) {
+		this.ncStatus = ncStatus;
+	}
+	public String getNcStatus() {
+		return ncStatus;
+	}
 
+	public String getNcstate() {
+		return ncstate;
+	}
+	
+	private String setNcstate(String sfcRef, String currOpRef) {
+		 FindNCsBySFCRequest findOpenNcbySfcRequest = new FindNCsBySFCRequest();
+		 findOpenNcbySfcRequest.setSfcRef(sfcRef);	 
+		 List<NCStatus> openNcStatus = new ArrayList <NCStatus> ();
+		 openNcStatus.add(NCStatus.OPEN);
+		 openNcStatus.add(NCStatus.CLOSE_PENDING);	     
+	     List<String> operation1 = new ArrayList <String> ();
+	     operation1.add(currOpRef);
+	     findOpenNcbySfcRequest.setNcStatusFilter(openNcStatus);
+	     findOpenNcbySfcRequest.setOperations(operation1);
+	     
+		 FindNCsBySFCRequest findClosedNcbySfcRequest = new FindNCsBySFCRequest();
+		 findClosedNcbySfcRequest.setSfcRef(sfcRef);	 
+		 List<NCStatus> closedNcStatus = new ArrayList <NCStatus> ();
+		 closedNcStatus.add(NCStatus.CLOSED);
+		 closedNcStatus.add(NCStatus.CANCELLED);	     
+	     List<String> operation2 = new ArrayList <String> ();
+	     operation2.add(currOpRef);
+	     findClosedNcbySfcRequest.setNcStatusFilter(closedNcStatus);
+	     findClosedNcbySfcRequest.setOperations(operation2);
+		try {
+			FindNCsBySFCResponse openNcsResponse = nCProductionService.findNCsBySFC(findOpenNcbySfcRequest);
+			List<ReadNCResponse> openNcsList = openNcsResponse.getNcs();
+			FindNCsBySFCResponse closedNcsResponse = nCProductionService.findNCsBySFC(findClosedNcbySfcRequest);
+			List<ReadNCResponse> closedNcsList = closedNcsResponse.getNcs();
+			if (openNcsList.size()> 0){
+				ncstate = "Pending";
+			} else if (closedNcsList.size()>0){
+				ncstate = "Closed";
+			} else if (openNcsList.size()==0 && closedNcsList.size() == 0){
+				ncstate = "N/A";
+			}
+		
+		} catch (BusinessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
+		return ncstate;
+	}
 
 	public String getSfc() {
 		return sfc;
@@ -541,8 +604,9 @@ public class VisualStatusIndicatorPlugin extends BasePodPlugin implements SfcCha
         				String datacoll  = setDatacollection(sfcRef.toString(),currOpRef, currResref);
         				String tool = setToolstate(sfcRef.toString(),currOpRef);
         				String buyoff = setBuyoffstate(sfcRef.toString(),currOpRef,currResref);
+        				String nonConf = setNcstate(sfcRef.toString(),currOpRef);
         				startStatus = "VALID";
-        				completeStatus = "INVALID";
+        				//completeStatus = "INVALID";
         				if (workins.equals("Closed")){
         					workInststatus = "VALID";
         				} else if (workins.equals("Pending")){
@@ -579,6 +643,13 @@ public class VisualStatusIndicatorPlugin extends BasePodPlugin implements SfcCha
         				} else if (buyoff.equals("N/A")){
         					buyoffStatus = "NOTEXISTS";
         				}
+        				if (nonConf.equals("Closed")){
+        					ncStatus = "VALID";
+        				} else if (nonConf.equals("Pending")){
+        					ncStatus = "INVALID";
+        				} else if (nonConf.equals("N/A")){
+        					ncStatus = "NOTEXISTS";
+        				}
         				SfcStatusItem sfcStatusitem = new SfcStatusItem();
         				sfcStatusList.add(sfcStatusitem);   				  
         				FacesUtility.removeSessionMapValue("sfcStatusTableBeanConfigurator");
@@ -587,12 +658,13 @@ public class VisualStatusIndicatorPlugin extends BasePodPlugin implements SfcCha
     			} 
             	}else {
             		startStatus = "NONE";
-    				completeStatus = "NONE";
+    				//completeStatus = "NONE";
             		workInststatus = "NONE";
             		assemblystatus = "NONE";
             		buyoffStatus = "NONE";
             		dcStatus = "NONE";
             		toolStatus = "NONE";
+            		ncStatus = "NONE";
             		SfcStatusItem sfcStatusitem = new SfcStatusItem();
             		sfcStatusList.add(sfcStatusitem);   				  
             		FacesUtility.removeSessionMapValue("sfcStatusTableBeanConfigurator");
@@ -604,6 +676,10 @@ public class VisualStatusIndicatorPlugin extends BasePodPlugin implements SfcCha
 			}
     }
 
+
+	/**
+	 *	Initialization of services that are represented as fields.
+	 */
 	private void initServices(){
 		dataCollectionService = Services.getService(COM_SAP_ME_DATACOLLECTION,DATA_COLLECTION_SERVICE);
 		sfcStateService = Services.getService(COM_SAP_ME_PRODUCTION,SFC_STATE_SERVICE);
@@ -613,9 +689,8 @@ public class VisualStatusIndicatorPlugin extends BasePodPlugin implements SfcCha
 		toolLogService = Services.getService(COM_SAP_ME_TOOLING,TOOL_LOG_SERVICE);
 		retrieveComponentsService = Services.getService(COM_SAP_ME_PRODUCTION,RETRIEVE_COMPONENTS_SERVICE);
 		workInstructionConfigurationService = Services.getService(COM_SAP_ME_PRODUCTDEFINITION,WORK_INSTRUCTION_CONFIGURATION_SERVICE);
+		nCProductionService = Services.getService(COM_SAP_ME_NONCONFORMANCE,NCPRODUCTION_SERVICE);
 	}
-
-
 	public void setTableConfigBean(TableConfigurator tableConfigBean) {
 		this.tableConfigBean = tableConfigBean;
 		if (tableConfigBean.getColumnBindings() == null || tableConfigBean.getColumnBindings().size() < 1) {

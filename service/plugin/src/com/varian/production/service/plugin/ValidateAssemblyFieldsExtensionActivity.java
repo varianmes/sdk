@@ -35,15 +35,24 @@ public class ValidateAssemblyFieldsExtensionActivity implements
 		sysruleval =  Boolean.valueOf(sysrulesetting.getSetting().toString());	
 		if (sysruleval){
 		String assemblyData = null;
-		String glassSerial = null;
 		ObjectReference objsfcRef = new ObjectReference(dto.getSfcRef().toString());
 		SfcKeyData sfcKeyData = sfcStateService.findSfcKeyDataByRef(objsfcRef);
 		String sfcNumber = sfcKeyData.getSfc();
-		String sfcSerialNumber = sfcNumber.substring(3,sfcNumber.length());
+		String[] mySfcStrings = sfcNumber.split("-");
+		String sfcSerialNumber = null;
+		String sfcPrefix = mySfcStrings[0];
+		try {
+		sfcSerialNumber = mySfcStrings[1];
+		} catch (Exception e) {
+			throw new InvalidGlassSerialNumberException(20116, sfcNumber);	
+		}
+		//String sfcSerialNumber = sfcNumber.substring(3,sfcNumber.length());
 		List<AssemblyDataField> assemblyDataFields = dto.getAssemblyDataFields();
 		for (AssemblyDataField assemblyDataField : assemblyDataFields) {
 			if ("GLASS_SERIAL_NUMBER".equals(assemblyDataField.getAttribute())) {
-				assemblyData = assemblyDataField.getValue();
+				//assemblyData = assemblyDataField.getValue();
+				String[] myAssyStrings = assemblyDataField.getValue().split("-");
+				assemblyData = myAssyStrings[0];
 					if (assemblyData == null || sfcSerialNumber == null){
 						throw new InvalidGlassSerialNumberException(20116, sfcNumber);
 					}
@@ -52,12 +61,35 @@ public class ValidateAssemblyFieldsExtensionActivity implements
 					}				
 			}
 		if ("SFC".equals(assemblyDataField.getAttribute())) {
-			assemblyData = assemblyDataField.getValue();
-			glassSerial = assemblyData.substring(3,assemblyData.length());
-			if (glassSerial == null || sfcSerialNumber == null){
+			//assemblyData = assemblyDataField.getValue();
+			//glassSerial = assemblyData.substring(3,assemblyData.length());
+			String[] myAssyStrings = assemblyDataField.getValue().split("-");
+			String assemblyDataPrefix = myAssyStrings[0];
+			if (sfcPrefix.length()==2 && assemblyDataPrefix.length()==2){
+				if (sfcPrefix.equals("UR")){
+					if (!assemblyDataPrefix.equals("FM")){
+						throw new InvalidGlassSerialNumberException(20120,sfcNumber);
+					}
+				} else if (sfcPrefix.equals("TR")){
+					if (!assemblyDataPrefix.equals("UR")){
+						throw new InvalidGlassSerialNumberException(20121,sfcNumber);
+					}
+				} else {
+					throw new InvalidGlassSerialNumberException(20119,sfcNumber);
+				}
+				
+			} else {
+				throw new InvalidGlassSerialNumberException(20119, sfcNumber);
+			}
+			try{
+			assemblyData = myAssyStrings[1];
+			} catch (Exception e){
+				throw new InvalidGlassSerialNumberException(20116, sfcNumber);
+			}
+			if (assemblyData == null || sfcSerialNumber == null){
 				throw new InvalidGlassSerialNumberException(20116, sfcNumber);	
 			}
-			if (!glassSerial.equals(sfcSerialNumber)){
+			if (!assemblyData.equals(sfcSerialNumber)){
 				throw new InvalidGlassSerialNumberException(20118, sfcNumber);
 				}		
 			}
@@ -65,9 +97,6 @@ public class ValidateAssemblyFieldsExtensionActivity implements
 		}
 		}
 
-	/**
-	 *	Initialization of services that are represented as fields.
-	 */
 	private void initServices(){
 		sfcStateService = Services.getService(COM_SAP_ME_PRODUCTION,SFC_STATE_SERVICE);
 		systemRuleService = Services.getService(COM_SAP_ME_APPCONFIG,SYSTEM_RULE_SERVICE);

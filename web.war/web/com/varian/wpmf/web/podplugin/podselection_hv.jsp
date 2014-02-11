@@ -84,9 +84,9 @@
 						  </h:column>		
 						     <h:column>
                           <f:facet name="header">
-            			  <h:outputText value="Complete" />
+            			  <h:outputText value="NonConformances" />
                           </f:facet>
-						  <h:graphicImage url="/com/varian/wpmf/web/podplugin/#{visualStatusIndicatorBean.completeStatus}.png"/>
+						  <h:graphicImage url="/com/varian/wpmf/web/podplugin/#{visualStatusIndicatorBean.ncStatus}.png"/>
 						  </h:column>				
 						   </sap:dataTable>	
 						        </ls:gridLayoutCell>                         
