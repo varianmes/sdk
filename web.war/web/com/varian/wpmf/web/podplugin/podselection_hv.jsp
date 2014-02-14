@@ -54,7 +54,7 @@
 						  </h:column>	
                           <h:column>
                           <f:facet name="header">
-            			  <h:outputText value="WorkInstructions" />
+            			  <h:outputText value="WorkInst" />
                           </f:facet>
 						  <h:graphicImage url="/com/varian/wpmf/web/podplugin/#{visualStatusIndicatorBean.workInststatus}.png"/>
 						  </h:column>
@@ -66,7 +66,7 @@
 						  </h:column>	
 						     <h:column>					 
                           <f:facet name="header">
-            			  <h:outputText value="DataCollection" />
+            			  <h:outputText value="DataCollect" />
                           </f:facet>
 						  <h:graphicImage url="/com/varian/wpmf/web/podplugin/#{visualStatusIndicatorBean.dcStatus}.png"/>
 						  </h:column>
@@ -84,12 +84,12 @@
 						  </h:column>		
 						     <h:column>
                           <f:facet name="header">
-            			  <h:outputText value="NonConformances" />
+            			  <h:outputText value="NC" />
                           </f:facet>
 						  <h:graphicImage url="/com/varian/wpmf/web/podplugin/#{visualStatusIndicatorBean.ncStatus}.png"/>
-						  </h:column>				
-						   </sap:dataTable>	
-						        </ls:gridLayoutCell>                         
+						  </h:column>
+						  </sap:dataTable>
+						 </ls:gridLayoutCell>                         
                         </ls:gridLayoutRow>
                          <ls:gridLayoutRow facet="rows" >
                          <ls:gridLayoutCell id="Refreshcell" facet="cells"  height="1.25em" colSpan="2" HAlign="ENDOFLINE">

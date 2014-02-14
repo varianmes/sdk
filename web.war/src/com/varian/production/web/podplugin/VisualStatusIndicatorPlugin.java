@@ -48,11 +48,13 @@ import com.sap.me.wpmf.util.FacesUtility;
 import com.sap.me.wpmf.util.MessageHandler;
 import com.varian.lsf.SfcStatusItem;
 import com.visiprise.frame.service.ext.SecurityContext;
+import com.sap.me.production.AssembledAndUnfilledComponentsResponse;
+import com.sap.me.production.BomComponent;
 import com.sap.me.production.BuyoffStateEnum;
 import com.sap.me.production.FindBuyoffsBySfcData;
 import com.sap.me.production.FindBuyoffsBySfcRequest;
 import com.sap.me.production.FindBuyoffsBySfcResponse;
-import com.sap.me.production.GroupUnfilledAsBuiltComponentsRequest;
+import com.sap.me.production.GroupAssembledAndUnfilledComponentsRequest;
 import com.sap.me.production.InvalidSfcException;
 import com.sap.me.production.NoComponentsToAssembleException;
 import com.sap.me.production.SfcBasicData;
@@ -60,7 +62,6 @@ import com.sap.me.production.SfcIdentifier;
 import com.sap.me.production.SfcStateServiceInterface;
 import com.sap.me.production.SfcStep;
 import com.sap.me.production.UnfilledComponent;
-import com.sap.me.production.UnfilledComponentsResponse;
 import com.sap.me.status.StatusBasicConfiguration;
 import com.sap.me.status.StatusServiceInterface;
 import com.sap.me.tooling.GetLoggedQuantityRequest;
@@ -106,8 +107,7 @@ public class VisualStatusIndicatorPlugin extends BasePodPlugin implements SfcCha
     private String workInststate = null;
 	private String workInststatus = null;
 	private String ncstate = null;
-	private String ncStatus = null;
-	//private String completeStatus = null;    
+	private String ncStatus = null;  
 	private String currResref = null;
     private String currOpRef= null;
     private SfcStateServiceInterface sfcStateService;
@@ -143,14 +143,7 @@ public class VisualStatusIndicatorPlugin extends BasePodPlugin implements SfcCha
 	public void setStartStatus(String startStatus) {
 		this.startStatus = startStatus;
 	}
-	/*
-	public String getCompleteStatus() {
-		return completeStatus;
-	}
-	public void setCompleteStatus(String completeStatus) {
-		this.completeStatus = completeStatus;
-	}
-	*/
+
 	public String getWorkInststatus() {
 		return workInststatus;
 	}
@@ -175,8 +168,7 @@ public class VisualStatusIndicatorPlugin extends BasePodPlugin implements SfcCha
 		while (sfcStepIterator.hasNext()){
 		SfcStep sfcStepdetail = (SfcStep) sfcStepIterator.next();
 		String inWorkOper = sfcStepdetail.getOperationRef();
-		 String currOpRefHash = currentOpRef.substring(0,currentOpRef.lastIndexOf(",")+1)+ "#";
-		//String currOpRefHash = currentOpRef.substring(0,currentOpRef.length()-1)+ "#";	
+		String currOpRefHash = currentOpRef.substring(0,currentOpRef.lastIndexOf(",")+1)+ "#";
 		if (inWorkOper.equals(currOpRefHash)){
 			userRef = sfcStepdetail.getUserRef();	
 		}
@@ -261,26 +253,33 @@ public class VisualStatusIndicatorPlugin extends BasePodPlugin implements SfcCha
 		SfcIdentifier sfcIdentifier = new SfcIdentifier();
 		sfcIdentifier.setSfcRef(sfcRef);
 		sfcIdentifierList.add(sfcIdentifier);
-		 
-		GroupUnfilledAsBuiltComponentsRequest grpUnfilledasBuiltCompReq = new GroupUnfilledAsBuiltComponentsRequest();
-		grpUnfilledasBuiltCompReq.setEnforceAssyStates(false);
-		grpUnfilledasBuiltCompReq.setOperationRef(currentOpRef);
-		grpUnfilledasBuiltCompReq.setOperationRequired(true);
-		grpUnfilledasBuiltCompReq.setSfcList(sfcIdentifierList);
-		UnfilledComponentsResponse unfilledCompResp1 = new UnfilledComponentsResponse();
+		GroupAssembledAndUnfilledComponentsRequest grpAssandUnfilledCompreq = new GroupAssembledAndUnfilledComponentsRequest();
+		grpAssandUnfilledCompreq.setEnforceAssyStates(false);
+		grpAssandUnfilledCompreq.setIncludeNonBomComponents(true);
+		grpAssandUnfilledCompreq.setIncludeRemoved(true);
+		grpAssandUnfilledCompreq.setOperationRef(currentOpRef);
+		grpAssandUnfilledCompreq.setOperationRequired(true);
+		grpAssandUnfilledCompreq.setSfcList(sfcIdentifierList);
+		AssembledAndUnfilledComponentsResponse response = new AssembledAndUnfilledComponentsResponse();
 		try {
-		unfilledCompResp1 = retrieveComponentsService.findUnfilledComponents(grpUnfilledasBuiltCompReq);
+		response = retrieveComponentsService.findAssembledAndUnfilledComponents(grpAssandUnfilledCompreq);
 		} catch (Exception e){
 			assemblystate = "N/A";
 			return assemblystate;
 		}
-		List<UnfilledComponent> unfilledCompList1 = new ArrayList<UnfilledComponent>();
-		unfilledCompList1 = unfilledCompResp1.getUnfilledComps();
+		List<BomComponent> bomcomplist = new ArrayList<BomComponent>();
+		bomcomplist = response.getBomComponents();
+		List<UnfilledComponent> missingcomplist = new ArrayList<UnfilledComponent>();
+		missingcomplist = response.getMissingComponents();
 		
-		if (unfilledCompList1.size()>0){
-			assemblystate = "Pending";
-		} else {
-			assemblystate = "Closed";
+		if (bomcomplist.size()>0){
+			if (missingcomplist.size()>0){
+				assemblystate = "Pending";	
+			} else {
+				assemblystate = "Closed";
+			}		
+		} else {	
+			assemblystate = "N/A";
 		}
 		return assemblystate;
 	}
@@ -552,7 +551,6 @@ public class VisualStatusIndicatorPlugin extends BasePodPlugin implements SfcCha
 			}
 		
 		} catch (BusinessException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}		
 		return ncstate;
@@ -606,7 +604,6 @@ public class VisualStatusIndicatorPlugin extends BasePodPlugin implements SfcCha
         				String buyoff = setBuyoffstate(sfcRef.toString(),currOpRef,currResref);
         				String nonConf = setNcstate(sfcRef.toString(),currOpRef);
         				startStatus = "VALID";
-        				//completeStatus = "INVALID";
         				if (workins.equals("Closed")){
         					workInststatus = "VALID";
         				} else if (workins.equals("Pending")){
@@ -676,10 +673,6 @@ public class VisualStatusIndicatorPlugin extends BasePodPlugin implements SfcCha
 			}
     }
 
-
-	/**
-	 *	Initialization of services that are represented as fields.
-	 */
 	private void initServices(){
 		dataCollectionService = Services.getService(COM_SAP_ME_DATACOLLECTION,DATA_COLLECTION_SERVICE);
 		sfcStateService = Services.getService(COM_SAP_ME_PRODUCTION,SFC_STATE_SERVICE);
