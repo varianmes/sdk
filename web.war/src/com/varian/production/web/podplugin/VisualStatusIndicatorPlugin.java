@@ -603,49 +603,49 @@ public class VisualStatusIndicatorPlugin extends BasePodPlugin implements SfcCha
         				String tool = setToolstate(sfcRef.toString(),currOpRef);
         				String buyoff = setBuyoffstate(sfcRef.toString(),currOpRef,currResref);
         				String nonConf = setNcstate(sfcRef.toString(),currOpRef);
-        				startStatus = "VALID";
+        				startStatus = "COMPLETED";
         				if (workins.equals("Closed")){
-        					workInststatus = "VALID";
+        					workInststatus = "COMPLETED";
         				} else if (workins.equals("Pending")){
-        					workInststatus = "INVALID";
+        					workInststatus = "PENDING";
         				} else if (workins.equals("N/A")){
-        					workInststatus = "NOTEXISTS";
+        					workInststatus = "NOTAPPLICABLE";
         				}
         				if (assem.equals("Closed")){
-        					assemblystatus = "VALID";
+        					assemblystatus = "COMPLETED";
         				} else if (assem.equals("Pending")){
-        					assemblystatus = "INVALID";
+        					assemblystatus = "PENDING";
         				} else if (assem.equals("N/A")){
-        					assemblystatus = "NOTEXISTS";
+        					assemblystatus = "NOTAPPLICABLE";
         				} 				
         				if (datacoll.equals("Closed")){
-        					dcStatus = "VALID";
+        					dcStatus = "COMPLETED";
         				} else if (datacoll.equals("Pending")){
-        					dcStatus = "INVALID";
+        					dcStatus = "PENDING";
         				} else if (datacoll.equals("N/A")){
-        					dcStatus = "NOTEXISTS";
+        					dcStatus = "NOTAPPLICABLE";
         				}
         			
         				if (tool.equals("Closed")){
-        					toolStatus = "VALID";
+        					toolStatus = "COMPLETED";
         				} else if (tool.equals("Pending")){
-        					toolStatus = "INVALID";
+        					toolStatus = "PENDING";
         				} else if (tool.equals("N/A")){
-        					toolStatus = "NOTEXISTS";
+        					toolStatus = "NOTAPPLICABLE";
         				}
         				if (buyoff.equals("Closed")){
-        					buyoffStatus = "VALID";
+        					buyoffStatus = "COMPLETED";
         				} else if (buyoff.equals("Pending")){
-        					buyoffStatus = "INVALID";
+        					buyoffStatus = "PENDING";
         				} else if (buyoff.equals("N/A")){
-        					buyoffStatus = "NOTEXISTS";
+        					buyoffStatus = "NOTAPPLICABLE";
         				}
         				if (nonConf.equals("Closed")){
-        					ncStatus = "VALID";
+        					ncStatus = "COMPLETED";
         				} else if (nonConf.equals("Pending")){
-        					ncStatus = "INVALID";
+        					ncStatus = "PENDING";
         				} else if (nonConf.equals("N/A")){
-        					ncStatus = "NOTEXISTS";
+        					ncStatus = "NOTAPPLICABLE";
         				}
         				SfcStatusItem sfcStatusitem = new SfcStatusItem();
         				sfcStatusList.add(sfcStatusitem);   				  
