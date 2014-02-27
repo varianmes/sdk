@@ -1,4 +1,5 @@
 package com.varian.production.service.plugin;
+import java.util.ArrayList;
 import java.util.List;
 import com.sap.me.appconfig.FindSystemRuleSettingRequest;
 import com.sap.me.appconfig.SystemRuleSetting;
@@ -33,6 +34,13 @@ public class ValidateAssemblyFieldsExtensionActivity implements
 		SystemRuleSetting sysrulesetting = systemRuleService.findSystemRuleSetting(findsysrulereq);
 		sysruleval =  Boolean.valueOf(sysrulesetting.getSetting().toString());	
 		if (sysruleval){
+	    //fix
+		List<AssemblyDataField> datafield = new ArrayList<AssemblyDataField>();
+		datafield = dto.getAssemblyDataFields();
+		if (datafield.size() == 0){	
+			return;
+		}
+		//fix	
 		String sfcSerial = null;	
 		String assemblyData = null;
 		String lastthree = null;
