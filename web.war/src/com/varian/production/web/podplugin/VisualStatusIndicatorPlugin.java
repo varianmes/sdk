@@ -315,9 +315,18 @@ public class VisualStatusIndicatorPlugin extends BasePodPlugin implements SfcCha
 			opReq.setSfcList(opSfcList);
 			opReq.setCollectDataAt(CollectDataAt.ANYTIME);
 			opReq.setWorkCenterRef(wcRef.toString());
+			ObjectReference objref = new ObjectReference();
+			objref.setRef(sfcRef);	
+			String routerRef = null;	
 			DCGroupsToCollectResponse response = new DCGroupsToCollectResponse();
 			try {
-				response = dataCollectionService.findDcGroupsToCollect(opReq);				
+				response = dataCollectionService.findDcGroupsToCollect(opReq);
+				Collection<SfcStep> sfcStepColl = sfcStateService.findCurrentRouterSfcStepsBySfcRef(objref);
+				for (SfcStep attrValue : sfcStepColl) {
+					if (!(attrValue.getStatus()== null) && ("In_Work".equals(attrValue.getStatus().value()))) {
+						routerRef = attrValue.getRouterRef();
+				  }
+				}
 			} catch (BusinessException e) {
 				e.printStackTrace();
 			}
@@ -339,7 +348,8 @@ public class VisualStatusIndicatorPlugin extends BasePodPlugin implements SfcCha
 							"PARAMETRIC_MEASURE.EDITED<>'C'  AND PARAMETRIC.PARA_CONTEXT_GBO = '"+sfcRef+"' "+
 							"AND PARAMETRIC_MEASURE.PARAMETRIC_BO = PARAMETRIC.HANDLE AND "+
 							"PARAMETRIC_MEASURE.MEASURE_NAME = '"+dcParamName+"' AND "+
-							"PARAMETRIC.times_processed = '"+timesProcessed+"'");
+							"PARAMETRIC.times_processed = '"+timesProcessed+"' "+
+							 "AND PARAMETRIC.ROUTER_BO = '"+routerRef+"'");
 					SystemBase sysBase = SystemBase.createDefaultSystemBase();
 					queryData2 = sysBase.executeQuery(sqlString);		
 									
