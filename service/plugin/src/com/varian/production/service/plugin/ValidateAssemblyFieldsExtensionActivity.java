@@ -50,22 +50,27 @@ public class ValidateAssemblyFieldsExtensionActivity implements
 			String assemblyData = null;
 			String lastthree = null;
 			String split[] = null;
-			int secondlength = 0;
+			String secondhalf = null;
 			ObjectReference objsfcRef = new ObjectReference(dto.getSfcRef().toString());
 			SfcKeyData sfcKeyData = sfcStateService.findSfcKeyDataByRef(objsfcRef);
 			String sfcNumber = sfcKeyData.getSfc(); 
 			try{
 			lastthree = sfcNumber.substring((sfcNumber.length()-3),sfcNumber.length());  
 	        split = sfcNumber.split("-");
-	        secondlength = split[1].length();
+	        secondhalf = sfcNumber.substring(sfcNumber.indexOf("-")+1,sfcNumber.length());
 			} catch (Exception e) {
 				throw new InvalidGlassSerialNumberException(20119, sfcNumber);
 			}
-	        if( (split.length>1) && (secondlength>3)){        
+	     //  if( (split.length>1) && (secondlength>3)){
+			  if(split.length>1){
 	        	if (lastthree.startsWith("-") || !lastthree.contains("-")){
 	        		sfcSerial = sfcNumber.substring(3,sfcNumber.length());
 	            } else {
-	         		sfcSerial =  sfcNumber.substring(3,sfcNumber.lastIndexOf("-"));         		
+	            	if (secondhalf.length() == 1) {
+	            	sfcSerial = secondhalf;	
+	            	} else {
+	         		sfcSerial =  sfcNumber.substring(3,sfcNumber.lastIndexOf("-"));
+	            	}
 	            }
 	        } else {
 	        	throw new InvalidGlassSerialNumberException(20122, sfcNumber);
@@ -83,19 +88,26 @@ public class ValidateAssemblyFieldsExtensionActivity implements
 			String csfc = assemblyDataField.getValue();
 			String clastthree  =null;
 			 String csplit[] = null;
-			 int seclength = 0;
+			 String csecondhalf = null;		
+			// int seclength = 0;
 			 try {
 				 clastthree = csfc.substring((csfc.length()-3),csfc.length());			
 			csplit = csfc.split("-");
-			seclength = csplit[1].length();
+			 csecondhalf = csfc.substring(csfc.indexOf("-")+1,csfc.length());
+			//seclength = csplit[1].length();
 			 } catch (Exception e) {
 					throw new InvalidGlassSerialNumberException(20119, sfcNumber);
 			 }
-	        if( (csplit.length>1) && (seclength>3)){
+	       // if( (csplit.length>1) && (seclength>3)){
+			 if(csplit.length>1){
 	   	        if (clastthree.startsWith("-") || !clastthree.contains("-")){
 	        	assemblyData = csfc.substring(3,csfc.length());
-	   	        } else {	   	        	
-	   	        assemblyData =  csfc.substring(3,csfc.lastIndexOf("-"));
+	   	        } else {
+	   	        	if (csecondhalf.length() == 1){
+	   	        		assemblyData = csecondhalf;
+	   	        	} else {
+	   	        	assemblyData =  csfc.substring(3,csfc.lastIndexOf("-"));
+	   	        	}
 	   	        }
 	        } else {
 	        	throw new InvalidGlassSerialNumberException(20123, csfc);
