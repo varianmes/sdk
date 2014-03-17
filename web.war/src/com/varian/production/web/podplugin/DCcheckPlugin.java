@@ -48,7 +48,7 @@ public class DCcheckPlugin extends BasePodPlugin {
 
 	public void execute() throws Exception {
 		initServices();	
-		//isBlockingEnabled();
+		isBlockingEnabled();
 		List<SfcSelection> sfcList;			
 		sfcList = getPodSelectionModel().getResolvedSfcs();
 		if(sfcList!= null && sfcList.size() > 0) {
@@ -136,9 +136,9 @@ public class DCcheckPlugin extends BasePodPlugin {
 			  throw new CheckOpenDCsException(sfcKeyData.getSfc(),dclist.toString(),pendingCount);	
 		}
 		}
-		//flag = 1;
-		//isBlockingEnabled();
-		//complete();
+		flag = 1;
+		isBlockingEnabled();
+		complete();
 	}
 
 	/**
@@ -160,11 +160,11 @@ public class DCcheckPlugin extends BasePodPlugin {
      */
 	//@Overrideddf
 	public boolean isBlockingEnabled() {
-		//if (flag ==0 ){
+		if (flag ==0 ){
 		return true;
-	//	} else {
-	//		return false;
-	//	}
+	   } else {
+			return false;
+	}
 	}
 
 		
