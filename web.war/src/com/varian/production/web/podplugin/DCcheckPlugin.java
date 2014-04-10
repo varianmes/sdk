@@ -32,7 +32,7 @@ import com.sap.me.production.podclient.PodSelectionModelInterface;
 import com.varian.hook.exception.CheckOpenDCsException;
 import com.visiprise.frame.service.ext.SecurityContext;
 import com.sap.me.production.podclient.SfcSelection;
-
+//CHG0066371 - vmurthy 7/apr/2014
 public class DCcheckPlugin extends BasePodPlugin {
 	private static final String SFC_STATE_SERVICE = "SfcStateService";
 	private static final String COM_SAP_ME_PRODUCTION = "com.sap.me.production";
@@ -48,11 +48,12 @@ public class DCcheckPlugin extends BasePodPlugin {
 
 	public void execute() throws Exception {
 		initServices();	
+// to block other plugins in queue		
 		isBlockingEnabled();
 		List<SfcSelection> sfcList;			
 		sfcList = getPodSelectionModel().getResolvedSfcs();
 		if(sfcList!= null && sfcList.size() > 0) {
-			//
+			//if atleast one sfc is selected
 			ObjectReference sfcRef1 = new ObjectReference(sfcList.get(0).getSfc().getSfcRef());	
 			SfcBasicData sfcBasicData = sfcStateService.findSfcDataByRef(sfcRef1);
 			String sfcRef = sfcBasicData.getSfcRef();
@@ -86,6 +87,7 @@ public class DCcheckPlugin extends BasePodPlugin {
 		SfcKeyData sfcKeyData = new SfcKeyData();
 		int pendingCount = 0;
 		try {
+			//get all DC groups attached to SFC
 			response = dataCollectionService.findDcGroupsToCollect(opReq);	
 			sfcKeyData = sfcStateService.findSfcKeyDataByRef(objref);
 			Collection<SfcStep> sfcStepColl = sfcStateService.findCurrentRouterSfcStepsBySfcRef(objref);
@@ -110,6 +112,7 @@ public class DCcheckPlugin extends BasePodPlugin {
 				Data queryData2 = null;
 				Data parametricData1 = null;
 				BigDecimal timesProcessed = dcval.getTimesProcessed();
+				//check if DC parameter is collected
 				sqlString.append("SELECT COUNT(*) AS COUNT  FROM PARAMETRIC, PARAMETRIC_MEASURE WHERE " +
 						"PARAMETRIC_MEASURE.EDITED<>'C'  AND PARAMETRIC.PARA_CONTEXT_GBO = '"+sfcRef+"' "+
 						"AND PARAMETRIC_MEASURE.PARAMETRIC_BO = PARAMETRIC.HANDLE AND "+
@@ -124,6 +127,7 @@ public class DCcheckPlugin extends BasePodPlugin {
 					parametricData1 = dataIterator.next();
 					count = parametricData1.getInteger("COUNT");
 					if(count == 0){	
+						//if not collected add the DC parameter to a separate list
 						pendingCount++;
 						dclist.append(dcParamVal.getParameterName());
 						dclist.append(";");	
