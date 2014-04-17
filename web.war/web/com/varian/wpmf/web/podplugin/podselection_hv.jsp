@@ -88,6 +88,12 @@
                           </f:facet>
 						  <h:graphicImage url="/com/varian/wpmf/web/podplugin/#{visualStatusIndicatorBean.ncStatus}.png"/>
 						  </h:column>
+						   <h:column>
+                          <f:facet name="header">
+            			  <h:outputText value="TQC" />
+                          </f:facet>
+						  <h:graphicImage url="/com/varian/wpmf/web/podplugin/#{visualStatusIndicatorBean.tqcStatus}.png"/>
+						  </h:column>
 						  </sap:dataTable>
 						 </ls:gridLayoutCell>                         
                         </ls:gridLayoutRow>
