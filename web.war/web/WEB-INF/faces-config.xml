@@ -21,5 +21,95 @@
 			<property-name>beanName</property-name>
 			<value>sfcStatusTableBeanConfigurator</value>
 		</managed-property>
-	</managed-bean>    
+	</managed-bean>
+	<managed-bean>
+        <managed-bean-name>logTqcBuyoffBean</managed-bean-name>
+        <managed-bean-class>com.varian.production.web.podplugin.LogTqcBuyoffPlugin</managed-bean-class>
+        <managed-bean-scope>session</managed-bean-scope>
+        <managed-property>
+			<property-name>tableConfig</property-name>
+			<value>#{tqcBuyoffTableBeanConfigurator}</value>
+		</managed-property>
+    </managed-bean>
+    <managed-bean>
+		<managed-bean-name>tqcBuyoffTableBeanConfigurator</managed-bean-name>
+		<managed-bean-class>com.sap.me.production.podclient.PodClientTableConfigurator</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+		<managed-property>
+			<property-name>beanName</property-name>
+			<value>tqcBuyoffTableBeanConfigurator</value>
+		</managed-property>
+				<managed-property>
+			<property-name>columnBindings</property-name>
+			<property-class>java.util.HashMap</property-class>
+			<map-entries>
+				<key-class>java.lang.String</key-class>
+				<value-class>java.lang.String</value-class>
+				<map-entry>
+					<key>SFC</key>
+					<value>sfc;sfc.plugin.default.LABEL</value>
+				</map-entry>
+				<map-entry>
+					<key>BUYOFF</key>
+					<value>buyoff;buyoff.plugin.default.LABEL</value>
+				</map-entry>
+				<map-entry>
+					<key>DESCRIPTION</key>
+					<value>description;description.plugin.default.LABEL </value>
+				</map-entry>
+				<map-entry>
+					<key>ACTION</key>
+					<value>action;action.plugin.default.LABEL </value>
+				</map-entry>
+				<map-entry>
+					<key>COMMENTS</key>
+					<value>comments;comments.plugin.default.LABEL </value>
+				</map-entry>
+				<map-entry>
+					<key>USER</key>
+					<value>pastUser;pastUser.plugin.default.LABEL </value>
+				</map-entry>
+				<map-entry>
+					<key>STATE</key>
+					<value>buyoffState;buyoffState.plugin.default.LABEL </value>
+				</map-entry>
+			</map-entries>
+		</managed-property>
+		<managed-property>
+			<property-name>columnWidths</property-name>
+			<property-class>java.util.HashMap</property-class>
+			<map-entries>
+				<key-class>java.lang.String</key-class>
+				<value-class>java.lang.String</value-class>
+				<map-entry>
+					<key>SFC</key>
+					<value>10em</value>
+				</map-entry>
+				<map-entry>
+					<key>BUYOFF</key>
+					<value>10em</value>
+				</map-entry>
+				<map-entry>
+					<key>DESCRIPTION</key>
+					<value>13em</value>
+				</map-entry>
+				<map-entry>
+					<key>ACTION</key>
+					<value>10em</value>
+				</map-entry>
+				<map-entry>
+					<key>COMMENTS</key>
+					<value>10em</value>
+				</map-entry>
+				<map-entry>
+					<key>USER</key>
+					<value>10em</value>
+				</map-entry>
+				<map-entry>
+					<key>STATE</key>
+					<value>10em</value>
+				</map-entry>
+			</map-entries>
+		</managed-property>
+	</managed-bean>
 </faces-config>
