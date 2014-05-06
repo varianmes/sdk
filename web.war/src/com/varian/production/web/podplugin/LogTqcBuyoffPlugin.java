@@ -16,6 +16,9 @@ import javax.security.auth.Subject;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
+
+import com.sap.me.appconfig.FindSystemRuleSettingRequest;
+import com.sap.me.appconfig.SystemRuleSetting;
 import com.sap.me.common.ObjectReference;
 import com.sap.me.frame.Data;
 import com.sap.me.frame.SystemBase;
@@ -23,6 +26,8 @@ import com.sap.me.frame.domain.BusinessException;
 import com.sap.me.frame.jdbc.DynamicQuery;
 import com.sap.me.frame.jdbc.DynamicQueryFactory;
 import com.sap.me.plant.ResourceKeyData;
+import com.sap.me.productdefinition.FindItemGroupsForItemRefRequest;
+import com.sap.me.productdefinition.ItemGroupBasicConfiguration;
 import com.sap.me.productdefinition.OperationKeyData;
 import com.sap.me.production.AcceptBuyoffSfcData;
 import com.sap.me.production.AcceptBuyoffSfcStepData;
@@ -50,14 +55,21 @@ import com.sap.me.production.SfcStateServiceInterface;
 import com.sap.me.user.UserConfigurationServiceInterface;
 import com.sap.me.production.BuyoffServiceInterface;
 import com.varian.integration.connection.DataSourceConnection;
+import com.varian.lsf.BuyoffDetailsItem;
 import com.visiprise.globalization.DateGlobalizationServiceInterface;
 import com.visiprise.globalization.GlobalizationService;
 import com.visiprise.globalization.util.DateFormatStyle;
 import com.visiprise.globalization.util.DateTimeInterface;
 import com.visiprise.globalization.util.LocaleContextType;
 import com.visiprise.globalization.util.TimeFormatStyle;
+import com.sap.me.appconfig.SystemRuleServiceInterface;
+import com.sap.me.productdefinition.ItemGroupConfigurationServiceInterface;
 
 public class LogTqcBuyoffPlugin extends BasePodPlugin implements LoginModule {
+	private static final String ITEM_GROUP_CONFIGURATION_SERVICE = "ItemGroupConfigurationService";
+	private static final String COM_SAP_ME_PRODUCTDEFINITION = "com.sap.me.productdefinition";
+	private static final String COM_SAP_ME_APPCONFIG = "com.sap.me.appconfig";
+	private static final String SYSTEM_RULE_SERVICE = "SystemRuleService";
 	private static final String BUYOFF_SERVICE = "BuyoffService";
 	private static final String COM_SAP_ME_USER = "com.sap.me.user";
 	private static final String USER_CONFIGURATION_SERVICE = "UserConfigurationService";
@@ -89,6 +101,17 @@ public class LogTqcBuyoffPlugin extends BasePodPlugin implements LoginModule {
 	private String buyoffState = null;
 	private String routingRef = null;
 	private String newcomments;
+	private String currOp;
+	private SystemRuleServiceInterface systemRuleService;
+	private ItemGroupConfigurationServiceInterface itemGroupConfigurationService;
+
+	public String getCurrOp() {
+		return currOp;
+	}
+
+	public void setCurrOp(String currOp) {
+		this.currOp = currOp;
+	}
 
 	public String getUserRef() {
 		return userRef;
@@ -228,10 +251,46 @@ public class LogTqcBuyoffPlugin extends BasePodPlugin implements LoginModule {
 			SfcKeyData sfcKeyData = sfcList1.get(0).getSfc();
 			sfc = sfcKeyData.getSfc();
 			sfcRef = sfcKeyData.getSfcRef();
-			String currOp = opKeydata1.getOperation();
-			if (currOp.equals("FINAL_TEST") || currOp.equals("BOX_UP")
-					|| currOp.equals("BOX_UP_1") || currOp.equals("BOX_UP_2")
-					|| currOp.equals("BOX_UP_CUSTOM")) {
+			currOp = opKeydata1.getOperation();
+			//
+			ObjectReference objsfcRef = new ObjectReference();
+			objsfcRef.setRef(sfcRef);
+			SfcBasicData sfcbasicdata = sfcStateService.findSfcDataByRef(objsfcRef);
+			String itemRef = sfcbasicdata.getItemRef();
+			String rulename1 = "Z_TQC_OPERATIONS";
+			String sysruleval1 = null;
+			String sysruleval2 = null;
+			FindSystemRuleSettingRequest findsysrulereq1 = new FindSystemRuleSettingRequest();
+			findsysrulereq1.setRuleName(rulename1);
+			SystemRuleSetting sysrulesetting1 = systemRuleService.findSystemRuleSetting(findsysrulereq1);				
+			sysruleval1 = sysrulesetting1.getSetting().toString();
+			//
+			if(sysruleval1.contains(currOp+";")){
+				String buyoff = null;
+				if (currOp.equals("FINAL_TEST")){
+					String rulename2 = "Z_TQC_MATERIAL_GROUPS";
+					FindSystemRuleSettingRequest findsysrulereq2 = new FindSystemRuleSettingRequest();
+					findsysrulereq2.setRuleName(rulename2);
+					SystemRuleSetting sysrulesetting2 = systemRuleService.findSystemRuleSetting(findsysrulereq2);				
+					sysruleval2 = sysrulesetting2.getSetting().toString();
+					FindItemGroupsForItemRefRequest itemGrpReq = new FindItemGroupsForItemRefRequest();
+					itemGrpReq.setItemRef(itemRef);
+					Collection<ItemGroupBasicConfiguration> itemGroupConfig = itemGroupConfigurationService.findItemGroupsForItemRef(itemGrpReq);
+					for (ItemGroupBasicConfiguration attrValue : itemGroupConfig) {
+						if (sysruleval2.contains(attrValue.getItemGroup()+";")){
+							buyoff = "TQC_FINAL_TEST";
+						}
+					}
+					if (buyoff== null){
+						MessageHandler.handle("TQC buyoff is not applicable for this operation",null, MessageType.ERROR, this);
+						return;
+					}
+					
+				} else if (currOp.equals("BOX_UP") || currOp.equals("BOX_UP_1") || currOp.equals("BOX_UP_2") || currOp.equals("BOX_UP_CUSTOM")){
+					buyoff = "TQC_BOX_UP";
+				} else {
+					buyoff = "TQC";
+				}
 			String currOpRefHash1 = opKeydata1.getRef().substring(0,
 					opKeydata1.getRef().lastIndexOf(",") + 1)
 					+ "#";
@@ -243,12 +302,11 @@ public class LogTqcBuyoffPlugin extends BasePodPlugin implements LoginModule {
 						.newInstance();
 				selBuyoffDetail
 						.append("select HANDLE,BUYOFF,DESCRIPTION from buyoff "
-								+ "where BUYOFF = 'TQC' and CURRENT_REVISION = 'true'and SITE = '0536' ");
+								+ "where BUYOFF = '"+buyoff+"' and CURRENT_REVISION = 'true'and SITE = '0536' ");
 				queryData = sysBase.executeQuery(selBuyoffDetail);
 
 				if (queryData.size() > 0) {
 					buyoffRef = queryData.getString("HANDLE", "");
-
 					// check if buyoff is closed
 					Data queryData1 = null;
 					DynamicQuery selLastAction = DynamicQueryFactory
@@ -496,8 +554,14 @@ public class LogTqcBuyoffPlugin extends BasePodPlugin implements LoginModule {
 			acceptBData.setResourceRef(currResRef);
 			acceptBData.setOperationRef(currOpRef);
 			acceptbuyoffList.add(acceptBData);
-			AcceptBuyoffSfcData acceptBSData = new AcceptBuyoffSfcData();
-			acceptBSData.setBuyoff("TQC");
+			AcceptBuyoffSfcData acceptBSData = new AcceptBuyoffSfcData();			
+			if (currOp.equals("FINAL_TEST")){
+				acceptBSData.setBuyoff("TQC_FINAL_TEST");
+			} else if (currOp.equals("BOX_UP") || currOp.equals("BOX_UP_1") || currOp.equals("BOX_UP_2") || currOp.equals("BOX_UP_CUSTOM")){
+				acceptBSData.setBuyoff("TQC_BOX_UP");
+			} else {
+				acceptBSData.setBuyoff("TQC");
+			}
 			acceptBSData.setBuyOffRef(buyoffRef);
 			acceptBSData.setSfcRef(sfcRef);
 			acceptBSData.setSfcSteps(acceptbuyoffList);
@@ -627,15 +691,17 @@ public class LogTqcBuyoffPlugin extends BasePodPlugin implements LoginModule {
 	}
 
 	/**
-	 * Initialization of services that are represented as fields.
+	 *	Initialization of services that are represented as fields.
 	 */
-	private void initServices() {
+	private void initServices(){
 		sfcStateService = Services.getService(COM_SAP_ME_PRODUCTION,
 				SFC_STATE_SERVICE);
 		userConfigurationService = Services.getService(COM_SAP_ME_USER,
 				USER_CONFIGURATION_SERVICE);
 		buyoffService = Services.getService(COM_SAP_ME_PRODUCTION,
 				BUYOFF_SERVICE);
+		systemRuleService = Services.getService(COM_SAP_ME_APPCONFIG,SYSTEM_RULE_SERVICE);
+		itemGroupConfigurationService = Services.getService(COM_SAP_ME_PRODUCTDEFINITION,ITEM_GROUP_CONFIGURATION_SERVICE);
 	}
 
 	public Date getJavaDate(DateTimeInterface date) {

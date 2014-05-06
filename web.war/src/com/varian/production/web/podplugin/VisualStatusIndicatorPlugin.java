@@ -6,6 +6,9 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+
+import com.sap.me.appconfig.FindSystemRuleSettingRequest;
+import com.sap.me.appconfig.SystemRuleSetting;
 import com.sap.me.common.ObjectReference;
 import com.sap.me.datacollection.CollectDataAt;
 import com.sap.me.datacollection.DCGroupToCollectResponse;
@@ -33,7 +36,9 @@ import com.sap.me.productdefinition.AttachmentType;
 import com.sap.me.productdefinition.BOMConfigurationException;
 import com.sap.me.productdefinition.FindAttachmentByAttachedToContextRequest;
 import com.sap.me.productdefinition.FindAttachmentByAttachedToContextResponse;
+import com.sap.me.productdefinition.FindItemGroupsForItemRefRequest;
 import com.sap.me.productdefinition.FoundReferencesResponse;
+import com.sap.me.productdefinition.ItemGroupBasicConfiguration;
 import com.sap.me.productdefinition.OperationKeyData;
 import com.sap.me.productdefinition.WorkInstructionKeyData;
 import com.sap.me.production.podclient.BasePodPlugin;
@@ -71,10 +76,15 @@ import com.sap.me.tooling.ToolLogServiceInterface;
 import com.sap.me.production.RetrieveComponentsServiceInterface;
 import com.sap.me.productdefinition.WorkInstructionConfigurationServiceInterface;
 import com.sap.me.nonconformance.NCProductionServiceInterface;
+import com.sap.me.appconfig.SystemRuleServiceInterface;
+import com.sap.me.productdefinition.ItemGroupConfigurationServiceInterface;
 
 public class VisualStatusIndicatorPlugin extends BasePodPlugin implements
 		SfcChangeListenerInterface, RefreshWorklistListenerInterface {
 
+	private static final String ITEM_GROUP_CONFIGURATION_SERVICE = "ItemGroupConfigurationService";
+	private static final String COM_SAP_ME_APPCONFIG = "com.sap.me.appconfig";
+	private static final String SYSTEM_RULE_SERVICE = "SystemRuleService";
 	private static final String NCPRODUCTION_SERVICE = "NCProductionService";
 	private static final String COM_SAP_ME_NONCONFORMANCE = "com.sap.me.nonconformance";
 	private static final String WORK_INSTRUCTION_CONFIGURATION_SERVICE = "WorkInstructionConfigurationService";
@@ -114,6 +124,7 @@ public class VisualStatusIndicatorPlugin extends BasePodPlugin implements
 	private String currOper = null;
 	private String currResref = null;
 	private String currOpRef = null;
+	private String itemRef = null;
 	private SfcStateServiceInterface sfcStateService;
 	private StatusServiceInterface statusService;
 	private BuyoffServiceInterface buyoffService;
@@ -124,6 +135,8 @@ public class VisualStatusIndicatorPlugin extends BasePodPlugin implements
 	String[] columnDefs = new String[] {};
 	String[] listColumnNames = new String[] {};
 	private NCProductionServiceInterface nCProductionService;
+	private SystemRuleServiceInterface systemRuleService;
+	private ItemGroupConfigurationServiceInterface itemGroupConfigurationService;
 
 	@Override
 	public void beforeLoad() throws Exception {
@@ -611,14 +624,49 @@ public class VisualStatusIndicatorPlugin extends BasePodPlugin implements
 		return tqcState;
 	}
 
-	public String setTqcState(String sfcRef, String currOpRef,String currOp) {
-		if (currOp.equals("FINAL_TEST")||currOp.equals("BOX_UP")||currOp.equals("BOX_UP_1")||currOp.equals("BOX_UP_2")||currOp.equals("BOX_UP_CUSTOM")){
-		Data queryData = null;
+	public String setTqcState(String sfcRef, String currOpRef,String currOp,String itemRef) throws BusinessException {
+		initServices();
+		String rulename1 = "Z_TQC_OPERATIONS";
+		String sysruleval1 = null;
+		String sysruleval2 = null;
+		String buyoff = null;
+		FindSystemRuleSettingRequest findsysrulereq1 = new FindSystemRuleSettingRequest();
+		findsysrulereq1.setRuleName(rulename1);
+		SystemRuleSetting sysrulesetting1 = new SystemRuleSetting();
+		sysrulesetting1 = systemRuleService.findSystemRuleSetting(findsysrulereq1);					
+		sysruleval1 = sysrulesetting1.getSetting().toString();
+		
+		if(sysruleval1.contains(currOp+";")){			
+			if (currOp.equals("FINAL_TEST")){
+					String rulename2 = "Z_TQC_MATERIAL_GROUPS";
+					FindSystemRuleSettingRequest findsysrulereq2 = new FindSystemRuleSettingRequest();
+					findsysrulereq2.setRuleName(rulename2);
+					SystemRuleSetting sysrulesetting2 = new SystemRuleSetting();				
+					sysrulesetting2 = systemRuleService.findSystemRuleSetting(findsysrulereq2);							
+					sysruleval2 = sysrulesetting2.getSetting().toString();
+					FindItemGroupsForItemRefRequest itemGrpReq = new FindItemGroupsForItemRefRequest();
+					itemGrpReq.setItemRef(itemRef);			
+					Collection<ItemGroupBasicConfiguration> itemGroupConfig = itemGroupConfigurationService.findItemGroupsForItemRef(itemGrpReq);				
+					for (ItemGroupBasicConfiguration attrValue : itemGroupConfig) {
+						if (sysruleval2.contains(attrValue.getItemGroup()+";")){
+							buyoff = "TQC_FINAL_TEST";
+						}
+					}
+					if (buyoff== null){
+						tqcState = "N/A";
+						return tqcState;
+					}
+			} else if (currOp.equals("BOX_UP") || currOp.equals("BOX_UP_1") || currOp.equals("BOX_UP_2") || currOp.equals("BOX_UP_CUSTOM")){
+				buyoff = "TQC_BOX_UP";
+			} else {
+				buyoff = "TQC";
+			}
+			Data queryData = null;
 		SystemBase sysBase = SystemBase.createDefaultSystemBase();
 		DynamicQuery selBuyoffDetail = DynamicQueryFactory.newInstance();
 		selBuyoffDetail
-				.append("select HANDLE,BUYOFF,DESCRIPTION from buyoff "
-						+ "where BUYOFF = 'TQC' and CURRENT_REVISION = 'true'and SITE = '0536' ");
+				.append("select HANDLE from buyoff "
+						+ "where BUYOFF = '"+buyoff+"' and CURRENT_REVISION = 'true'and SITE = '0536' ");
 		queryData = sysBase.executeQuery(selBuyoffDetail);
 		String buyoffRef = null;
 		if (queryData.size() > 0) {
@@ -694,6 +742,7 @@ public class VisualStatusIndicatorPlugin extends BasePodPlugin implements
 				currResref = resKeyData.getRef();
 				currOpRef = opKeydata.getRef();
 				currOper = opKeydata.getOperation();
+				itemRef = sfcBasicData.getItemRef();
 				if (sfcStatus.equals("Active") || sfcStatus.equals("Hold")) {
 					setSfc(sfc);
 					String site = SecurityContext.instance().getSite();
@@ -708,7 +757,7 @@ public class VisualStatusIndicatorPlugin extends BasePodPlugin implements
 					String buyoff = setBuyoffstate(sfcRef.toString(),
 							currOpRef, currResref);
 					String nonConf = setNcstate(sfcRef.toString(), currOpRef);
-					String tqc = setTqcState(sfcRef.toString(), currOpRef, currOper);
+					String tqc = setTqcState(sfcRef.toString(), currOpRef, currOper,itemRef);
 					startStatus = "COMPLETED";
 					if (workins.equals("Closed")) {
 						workInststatus = "COMPLETED";
@@ -791,7 +840,10 @@ public class VisualStatusIndicatorPlugin extends BasePodPlugin implements
 		}
 	}
 
-	private void initServices() {
+	/**
+	 *	Initialization of services that are represented as fields.
+	 */
+	private void initServices(){
 		dataCollectionService = Services.getService(COM_SAP_ME_DATACOLLECTION,
 				DATA_COLLECTION_SERVICE);
 		sfcStateService = Services.getService(COM_SAP_ME_PRODUCTION,
@@ -810,6 +862,8 @@ public class VisualStatusIndicatorPlugin extends BasePodPlugin implements
 				WORK_INSTRUCTION_CONFIGURATION_SERVICE);
 		nCProductionService = Services.getService(COM_SAP_ME_NONCONFORMANCE,
 				NCPRODUCTION_SERVICE);
+		systemRuleService = Services.getService(COM_SAP_ME_APPCONFIG,SYSTEM_RULE_SERVICE);
+		itemGroupConfigurationService = Services.getService(COM_SAP_ME_PRODUCTDEFINITION,ITEM_GROUP_CONFIGURATION_SERVICE);
 	}
 
 	public void setTableConfigBean(TableConfigurator tableConfigBean) {

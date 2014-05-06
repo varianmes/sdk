@@ -6,24 +6,24 @@
 <%@ taglib prefix="sap" uri="http://java.sap.com/jsf/html/extended"%>
 <%@ taglib prefix="ls" uri="http://java.sap.com/jsf/html/internal"%>
 
-<f:subview id="sfcStepStatusView">
+<f:subview id="tqcBuyoffView">
 	<ls:script facet="headScripts" type="CUSTOM"
 		content="
 			function windowUnload() {
-                var btnControl = document.getElementById('popupWindowForm:POPUP_WINDOW:poupwindowInclude:sfcStepStatusView:Close:');
+                var btnControl = document.getElementById('popupWindowForm:POPUP_WINDOW:poupwindowInclude:tqcBuyoffView:Close:');
                 if (btnControl) {
                     btnControl.click();
                 }
                 }
          " />
-	<ls:panel facet="content" id="sfcStepStatusView"
+	<ls:panel facet="content" id="tqcBuyoffView"
 		title="Varian Log TQC Buyoff" width="100%" height="100%"
 		hasEditableTitle="false" isCollapsible="false" collapsed="false"
 		enabled="true" headerDesign="STANDARD" areaDesign="TRANSPARENT"
 		borderDesign="NONE" scrollingMode="NONE" isDragHandle="false"
 		contentPadding="NONE">
 		<f:attribute name="sap-delta-id"
-			value="#{sap:toClientId('sfcStepStatus')}" />
+			value="#{sap:toClientId('tqcBuyoff')}" />
 		<ls:matrixLayout facet="content" width="100%" height="100%">
 			<ls:matrixLayoutRow facet="rows">
 				<ls:matrixLayoutCell facet="cells" cellDesign="PADLESS" width="100%"
@@ -47,7 +47,7 @@
 					HAlign="FORCED LEFT" height="5%">
 					<ls:label text="		" visibility="BLANK" />
 					<ls:label facet="content" design="EMPHASIZED"
-						text="TQC Buyoff Details for the Selected SFC"
+						text="TQC Buyoff Details for the Selected SFC Varian"
 						doubleClickInfoEnabled="false" width="10em" />
 				</ls:gridLayoutCell>
 			</ls:gridLayoutRow>
@@ -77,7 +77,7 @@
 				<ls:gridLayoutCell id="fieldCell9" facet="cells" colSpan="4"
 					width="100%" height="5%" HAlign="FORCEDLEFT">
 					<ls:inputField facet="content" id="Comments" name="Comments"
-						changeInfoParameters="#{sap:deltaUpdateId(sap:toClientId('sfcStepStatusView'))}"
+						changeInfoParameters="#{sap:deltaUpdateId(sap:toClientId('tqcBuyoffView'))}"
 						value="#{logTqcBuyoffBean.newcomments}"
 						fieldHelpPressInfoEnabled="false" width="20em"
 						enterInfoEnabled="true" changeInfoEnabled="true"
@@ -123,7 +123,7 @@
 						requiredIndicatorAtFront="true" />
 					<ls:inputField facet="content" id="UserId" name="UserId"
 						upperCase="true"
-						changeInfoParameters="#{sap:deltaUpdateId(sap:toClientId('sfcStepStatusView'))}"
+						changeInfoParameters="#{sap:deltaUpdateId(sap:toClientId('tqcBuyoffView'))}"
 						value="#{logTqcBuyoffBean.userId}"
 						fieldHelpPressInfoEnabled="false" width="10em"
 						enterInfoEnabled="true" changeInfoEnabled="true"
@@ -139,12 +139,12 @@
 						requiredIndicatorAtFront="true" />
 					<ls:label text="  " visibility="BLANK" />
 					<ls:inputField facet="content" id="Password" name="Password"
-						changeInfoParameters="#{sap:deltaUpdateId(sap:toClientId('sfcStepStatusView'))}"
+						changeInfoParameters="#{sap:deltaUpdateId(sap:toClientId('tqcBuyoffView'))}"
 						passwordField="true" value="#{logTqcBuyoffBean.password}"
 						fieldHelpPressInfoEnabled="false" width="10em"
 						enterInfoEnabled="true" changeInfoEnabled="true"
-						changeInfoResponseData="delta" changeInfoClientAction="submit"
-						hideFieldHelp="true" />
+						changeInfoResponseData="delta" changeInfoClientAction="submit" 
+						hideFieldHelp="true"  />
 				</ls:gridLayoutCell>
 			</ls:gridLayoutRow>
 			<ls:gridLayoutRow facet="rows">
@@ -155,7 +155,7 @@
 						action="#{logTqcBuyoffBean.processWindowClosed}"
 						pressInfoEnabled="true" pressInfoClientAction="submit"
 						pressInfoResponseData="delta"
-						pressInfoParameters="#{sap:deltaUpdateId(sap:toClientId('sfcStepStatusView'))}" />
+						pressInfoParameters="#{sap:deltaUpdateId(sap:toClientId('tqcBuyoffView'))}" />
 				</ls:gridLayoutCell>
 			</ls:gridLayoutRow>
 
@@ -166,13 +166,13 @@
 						action="#{logTqcBuyoffBean.logbuyoff}" pressInfoEnabled="true"
 						width="8em" pressInfoResponseData="delta"
 						pressInfoClientAction="submit"
-						pressInfoParameters="#{sap:deltaUpdateId(sap:toClientId('sfcStepStatusView'))}" />
+						pressInfoParameters="#{sap:deltaUpdateId(sap:toClientId('tqcBuyoffView'))}" />
 					<ls:label text="   " visibility="BLANK" />
 					<ls:largeButton facet="content" id="Close" text="Close"
 						action="#{logTqcBuyoffBean.closePlugin}" pressInfoEnabled="true"
 						width="8em" pressInfoResponseData="delta"
 						pressInfoClientAction="submit"
-						pressInfoParameters="#{sap:deltaUpdateId(sap:toClientId('sfcStepStatusView'))}" />
+						pressInfoParameters="#{sap:deltaUpdateId(sap:toClientId('tqcBuyoffView'))}" />
 				</ls:gridLayoutCell>
 			</ls:gridLayoutRow>
 		</ls:gridLayout>
