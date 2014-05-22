@@ -5,8 +5,11 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import javax.el.MethodExpression;
@@ -558,6 +561,8 @@ public class LogToolPlugin extends BasePodPlugin {
 		String reqdQty = null;
 		String attachmentRef = null;
 		String toolgroupStatus = null;
+		String expirydate = null;
+		
 		int sflag = 0;
 		toolGroupList.clear();
 		initServices();
@@ -625,6 +630,7 @@ public class LogToolPlugin extends BasePodPlugin {
 						reqdQty = null;
 						attachmentRef = null;
 						toolgroupStatus =null;
+						expirydate = null;
 						try {
 							ToolGroupFullConfiguration toolGrpFullConfig = toolingConfigurationService
 									.readToolGroup(objToolgrpRef);
@@ -633,8 +639,13 @@ public class LogToolPlugin extends BasePodPlugin {
 							ObjectReference objStatusRef = new ObjectReference(toolGrpFullConfig.getStatusRef());
 							StatusBasicConfiguration statusBasicConfig = statusService.findStatusByRef(objStatusRef);
 							toolgroupStatus = statusBasicConfig.getStatusDescription();
+							if (!(toolGrpFullConfig.getExpirationDate()== null)){
+								String date =  toolGrpFullConfig.getExpirationDate().toString();
+								expirydate = date.substring(0,date.lastIndexOf("T"));
+							}
 							List<ToolGroupAttachmentPoint> attachmentPointList = toolGrpFullConfig
 									.getAttachmentList();
+							
 							for (ToolGroupAttachmentPoint attachmentPoint : attachmentPointList) {
 								ObjectReference objAttachOperRef = new ObjectReference(
 										attachmentPoint.getOperationRef());
@@ -668,6 +679,7 @@ public class LogToolPlugin extends BasePodPlugin {
 								newitem.setToolReqdQty(reqdQty);
 								newitem.setAttachmentRef(attachmentRef);
 								newitem.setStatus(toolgroupStatus);
+								newitem.setToolGrpExpDate(expirydate);
 								toolGroupList.add(newitem);
 							}
 
@@ -680,6 +692,7 @@ public class LogToolPlugin extends BasePodPlugin {
 							newitem.setToolReqdQty(reqdQty);
 							newitem.setAttachmentRef(attachmentRef);
 							newitem.setStatus(toolgroupStatus);
+							newitem.setToolGrpExpDate(expirydate);
 							toolGroupList.add(newitem);
 						}
 					}
@@ -705,6 +718,7 @@ public class LogToolPlugin extends BasePodPlugin {
 		setMessageBar(false, null);
 		String toolnumber = null;
 		String toolNumberStatus = null;
+		String expirydate = null;
 		int sflag = 0;
 		int tgflag = 0;
 		toolNumberList.clear();
@@ -758,7 +772,10 @@ public class LogToolPlugin extends BasePodPlugin {
 				}
 				for (ToolNumberBasicConfiguration toolNumConfig : toolNumList) {
 					toolnumber = toolNumConfig.getToolNumber();
-
+					if (!(toolNumConfig.getExpirationDate() == null)){
+						String date = toolNumConfig.getExpirationDate().toString();
+						expirydate = date.substring(0,date.lastIndexOf("T"));
+					}
 					ResourceStatusEnum toolStatus = toolNumConfig.getStatus();
 					toolNumberStatus = toolStatus.toString();
 
@@ -781,6 +798,7 @@ public class LogToolPlugin extends BasePodPlugin {
 							newitem.setToolNumRef(toolNumConfig.getRef()
 									.toString());
 							newitem.setToolGroup(toolGrprow.getToolGroup());
+							newitem.setToolNumExpDate(expirydate);
 							toolNumberList.add(newitem);
 						}
 
@@ -796,6 +814,7 @@ public class LogToolPlugin extends BasePodPlugin {
 								.setToolNumRef(toolNumConfig.getRef()
 										.toString());
 						newitem.setToolGroup(toolGrprow.getToolGroup());
+						newitem.setToolNumExpDate(expirydate);
 						toolNumberList.add(newitem);
 					}
 				}
@@ -893,7 +912,7 @@ public class LogToolPlugin extends BasePodPlugin {
 			}
 		}
 		// check if all selected tool numbers have status enabled
-	
+		//check for tool group and tool number  expiry
 
 		for (ToolNumberItem toolNumRow : toolNumberList) {
 			if (toolNumRow.isSelect()) {
@@ -902,6 +921,23 @@ public class LogToolPlugin extends BasePodPlugin {
 							+ toolNumRow.getToolNumber() + " is not enabled");
 					setMessageBar(true, LSMessageType.ERROR);
 					return;
+				}
+				
+				if (!(toolNumRow.getToolNumExpDate()== null)){
+						Date currentDate = new Date();
+			            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+			            try {
+							Date expiryDate = sdf.parse(toolNumRow.getToolNumExpDate());
+							if (currentDate.after(expiryDate)){
+								message = FacesUtility.getLocaleSpecificText("Tool Number "
+										+ toolNumRow.getToolNumber() + " Calibration has expired");
+								setMessageBar(true, LSMessageType.ERROR);
+								return;
+							}
+						} catch (ParseException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 				}
 			}
 		}
@@ -915,11 +951,29 @@ public class LogToolPlugin extends BasePodPlugin {
 					setMessageBar(true, LSMessageType.ERROR);
 					return;
 				}
-			}			
+		
+			if (!(toolGrpRow.getToolGrpExpDate()== null)){
+				Date currentDate = new Date();
+	            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+	            try {
+					Date expiryDate = sdf.parse(toolGrpRow.getToolGrpExpDate());
+					if (currentDate.after(expiryDate)){
+						message = FacesUtility.getLocaleSpecificText("Tool Group "
+								+ toolGrpRow.getToolGroup() + " Calibration has expired");
+						setMessageBar(true, LSMessageType.ERROR);
+						return;
+					}
+				} catch (ParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
 		}
-		//check for tool group and tool number calibration expiry
-		//add tooling status to sfc selection table
-		//if possible try to filter only sfcs that have tooling status pending
+		}
+	
+		
+		
+	
 		
 		for (SfcSelectionItem sfcRow : sfcSelectionItemList) {
 			if (sfcRow.isSelect() && sfcRow.getToolStatus().equals("Closed")) {

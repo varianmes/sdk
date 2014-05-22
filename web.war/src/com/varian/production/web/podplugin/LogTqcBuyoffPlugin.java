@@ -17,6 +17,8 @@ import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
 
+import com.sap.me.activity.LogActivityRequest;
+import com.sap.me.activity.LogActivityResponse;
 import com.sap.me.appconfig.FindSystemRuleSettingRequest;
 import com.sap.me.appconfig.SystemRuleSetting;
 import com.sap.me.common.ObjectReference;
@@ -64,8 +66,11 @@ import com.visiprise.globalization.util.LocaleContextType;
 import com.visiprise.globalization.util.TimeFormatStyle;
 import com.sap.me.appconfig.SystemRuleServiceInterface;
 import com.sap.me.productdefinition.ItemGroupConfigurationServiceInterface;
+import com.sap.me.activity.ActivityLogServiceInterface;
 
 public class LogTqcBuyoffPlugin extends BasePodPlugin implements LoginModule {
+	private static final String COM_SAP_ME_ACTIVITY = "com.sap.me.activity";
+	private static final String ACTIVITY_LOG_SERVICE = "ActivityLogService";
 	private static final String ITEM_GROUP_CONFIGURATION_SERVICE = "ItemGroupConfigurationService";
 	private static final String COM_SAP_ME_PRODUCTDEFINITION = "com.sap.me.productdefinition";
 	private static final String COM_SAP_ME_APPCONFIG = "com.sap.me.appconfig";
@@ -104,6 +109,7 @@ public class LogTqcBuyoffPlugin extends BasePodPlugin implements LoginModule {
 	private String currOp;
 	private SystemRuleServiceInterface systemRuleService;
 	private ItemGroupConfigurationServiceInterface itemGroupConfigurationService;
+	private ActivityLogServiceInterface activityLogService;
 
 	public String getCurrOp() {
 		return currOp;
@@ -590,6 +596,40 @@ public class LogTqcBuyoffPlugin extends BasePodPlugin implements LoginModule {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			//select buyoff log handle 
+			
+			Data queryDatabuyoffLog = null;
+			String buyoffLoghandle = null;
+			SystemBase sysBase = SystemBase.createDefaultSystemBase();
+			DynamicQuery selbuyoffLogHandle = DynamicQueryFactory
+					.newInstance();
+			selbuyoffLogHandle
+					.append("select handle from BUYOFF_LOG "
+							+ "where state = 'C' and BUYOFF_ACTION = 'A' "
+							+ "and OPERATION_BO = '" + currOpRefHash
+							+ "' and SFC_BO = '" + sfcRef + "' and BUYOFF_BO = '"
+							+ buyoffRef + "'");
+			queryDatabuyoffLog = sysBase.executeQuery(selbuyoffLogHandle);
+
+			if (queryDatabuyoffLog.size() > 0) {
+
+				buyoffLoghandle	 = queryDatabuyoffLog.getString(
+						"HANDLE", "");
+			}
+			// update activity log table
+			String updateActivityLogStmnt = "update ACTIVITY_LOG set USER_ID = '"
+				+ userId
+				+ "' where ACTION_CODE = 'LOG_BUYOFF' and action_detail_handle = '"+buyoffLoghandle+"'";
+		
+		try {
+			PreparedStatement pstmt = connect.prepareStatement(updateActivityLogStmnt);
+			pstmt.executeUpdate();
+			connect.close();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 			action = "Accept";
 			closePlugin();
 		}
@@ -651,12 +691,39 @@ public class LogTqcBuyoffPlugin extends BasePodPlugin implements LoginModule {
 			try {
 				PreparedStatement pstmt = connect.prepareStatement(insertStmnt);
 				pstmt.executeUpdate();
+				
 				closePlugin();
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-
+			//log an activity for the reject buyoff action
+			LogActivityRequest logactivityReq = new LogActivityRequest();
+			logactivityReq.setEvent("baseFinished:LogBuyoff");
+			logactivityReq.setActionDetail(nextBuyoffID);
+			logactivityReq.setActionDetailRef(logHandle);
+			logactivityReq.setSfcRef(sfcRef);
+			logactivityReq.setOperationRef(currOpRef);
+			logactivityReq.setItemRef(itemRef);
+			logactivityReq.setRouterRef(routingRef);
+			logactivityReq.setResourceRef(currResRef);
+			logactivityReq.setShopOrderRef(shopOrderRef);
+			
+			@SuppressWarnings("unused")
+			LogActivityResponse activityResp = activityLogService.logActivity(logactivityReq);
+			//update activity log with new user id
+			String updateActivityLogStmnt1 = "update ACTIVITY_LOG set USER_ID = '"
+				+ userId
+				+ "' where ACTION_CODE = 'LOG_BUYOFF' and action_detail_handle = '"+logHandle+"'";
+		
+		try {
+			PreparedStatement pstmt = connect.prepareStatement(updateActivityLogStmnt1);
+			pstmt.executeUpdate();
+			connect.close();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		}
 	}
 
@@ -702,6 +769,7 @@ public class LogTqcBuyoffPlugin extends BasePodPlugin implements LoginModule {
 				BUYOFF_SERVICE);
 		systemRuleService = Services.getService(COM_SAP_ME_APPCONFIG,SYSTEM_RULE_SERVICE);
 		itemGroupConfigurationService = Services.getService(COM_SAP_ME_PRODUCTDEFINITION,ITEM_GROUP_CONFIGURATION_SERVICE);
+		activityLogService = Services.getService(COM_SAP_ME_ACTIVITY,ACTIVITY_LOG_SERVICE);
 	}
 
 	public Date getJavaDate(DateTimeInterface date) {
