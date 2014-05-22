@@ -482,7 +482,7 @@ public class VisualStatusIndicatorPlugin extends BasePodPlugin implements
 				if (queryData1.size() > 0) {
 					qtyRequired = queryData1.getString("QTY_REQ", "");
 				}
-
+				
 				GetLoggedQuantityRequest logQtyReq = new GetLoggedQuantityRequest();
 				logQtyReq.setAttachmentRef(attachmentRef);
 				logQtyReq.setOperationRef(currentOpRef);
@@ -490,7 +490,12 @@ public class VisualStatusIndicatorPlugin extends BasePodPlugin implements
 				BigDecimal loggedQty;
 				try {
 					loggedQty = toolLogService.getLoggedQuantity(logQtyReq);
+					/*
 					if (!loggedQty.toString().equals(qtyRequired)) {
+						pendingCount = pendingCount + 1;
+					}
+					*/
+					if (loggedQty.intValueExact() < Integer.parseInt(qtyRequired)) {
 						pendingCount = pendingCount + 1;
 					}
 				} catch (BusinessException e) {
