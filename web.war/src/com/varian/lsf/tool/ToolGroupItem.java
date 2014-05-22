@@ -10,7 +10,16 @@ public class ToolGroupItem {
 	private String toolReqdQty;
 	private String attachmentRef;
 	private String status;
+	private String toolGrpExpDate;
 	
+	public String getToolGrpExpDate() {
+		return toolGrpExpDate;
+	}
+
+	public void setToolGrpExpDate(String toolGrpExpDate) {
+		this.toolGrpExpDate = toolGrpExpDate;
+	}
+
 	public String getStatus() {
 		return status;
 	}

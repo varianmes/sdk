@@ -9,7 +9,16 @@ public class ToolNumberItem {
 	private String availableQty;
 	private String toolNumRef;
 	private String toolGroup;
+	private String toolNumExpDate;
 	
+	public String getToolNumExpDate() {
+		return toolNumExpDate;
+	}
+
+	public void setToolNumExpDate(String toolNumExpDate) {
+		this.toolNumExpDate = toolNumExpDate;
+	}
+
 	public String getToolGroup() {
 		return toolGroup;
 	}
