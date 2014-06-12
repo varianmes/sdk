@@ -36,12 +36,15 @@
                 unloadLightSpeed();
             }
            
-             function openBrowse() {
+            function openBrowse() {
                 var url = '/manufacturing/com/varian/lsf/tool/OperationBrowseLSF.jsf';
                 window.open(url, 'Browse', 'menubar=no height=400 width=600  scrollbars=yes status=no location=no resizable=yes');  
            }
            
-           
+            function sfcDetails() {
+                var url = '/manufacturing/com/varian/lsf/tool/ToolSFCdetailsLSF.jsf';
+                window.open(url, 'Details', 'menubar=no height=400 width=600  scrollbars=yes status=no location=no resizable=yes');  
+           }
            
         " />
         <f:attribute name="height" value="100%" />
@@ -89,9 +92,12 @@
 								upperCase="true" width="15em" changeInfoEnabled="true"
 								changeInfoParameters="#{sap:deltaUpdateId(sap:toClientId('fieldButtonPanel'))}"
 								enterInfoEnabled="true"	value="#{logToolBean.filterOperation}"							
-								changeInfoResponseData="delta" fieldHelpPressInfoEnabled="true"
-								fieldHelpPressInfoClientAction="none" showHelpButton="true"
-								fieldHelpPressInfoPrepareScript="openBrowse()" />
+								changeInfoResponseData="delta"/>
+							<ls:button facet="content" id="OperationClick" text=".."
+								action="#{logToolBean.operBrowse}" pressInfoEnabled="true"
+								width="1em" pressInfoResponseData="delta"
+								pressInfoClientAction="submit"
+								pressInfoParameters="#{sap:deltaUpdateId(sap:toClientId('fieldButtonPanel'))}" />
 							<ls:label text=" " visibility="BLANK" />
 							<ls:button facet="content" id="RETRIEVE" text="Retrieve"
 								action="#{logToolBean.readSfcSelectionData}"
@@ -193,7 +199,7 @@
 											value="#{sap:toClientId('toolnumberdisplayPanel')}" />
                                        	 	<sap:dataTable binding="#{logtoolNumberBeanConfigurator.table}"
                                                        width="100%" height="99%" rows="25"
-                                                       value="#{logToolBean.toolNumberList}" var="row" first="0"
+                                                       value="#{logToolBean.toolNumberList}" var="row" first="0" 
                                                        id="ncCodeList_table"/>
                                   			</ls:scrollContainer>
                                          	</ls:panel>
@@ -226,6 +232,15 @@
 							pressInfoResponseData="delta"
 							pressInfoParameters="#{sap:deltaUpdateId(sap:toClientId('toolNumberList'))}" />
 						<ls:label text=" " width="2px" designBar="LIGHT"/>
+						<ls:label text="" width="2px" designBar="LIGHT"/>
+						<ls:label text="" width="2px" designBar="LIGHT"/>
+						<ls:button text="Close"
+							action="#{logToolBean.closePlugin}"
+							pressInfoEnabled="true"
+							pressInfoClientAction="submit"
+							rendered="true"
+							pressInfoResponseData="delta"
+							pressInfoParameters="#{sap:deltaUpdateId(sap:toClientId('toolNumberList'))}" />
 					</ls:matrixLayoutCell>
 				</ls:matrixLayoutRow>
 				<ls:matrixLayoutRow facet="rows">

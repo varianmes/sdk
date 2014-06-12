@@ -21,12 +21,23 @@ public class OperationBrowse implements InternalTableSelectionEventListener {
 	private TableConfigurator configBean = null;
 	String[] columnDefs = new String[] { "operation;OPERATION_BROWSE.operation.LABEL", "version;OPERATION_BROWSE.version.LABEL","description;OPERATION_BROWSE.description.LABEL" ,"currentversion;OPERATION_BROWSE.currentversion.LABEL"};
 	String[] listColumnNames = new String[] { "OPERATION", "VERSION","DESCRIPTION","CURRENT_VERSION" };
+	String operationFilter;
 
 	public OperationBrowse() {
+		operationFilter = (String) FacesUtility.getSessionMapValue("toolBrowseBean_OPERATION");
 	}
 
 	public TableConfigurator getConfigBean() {
 		return configBean;
+	}
+	
+	public String getOperationFilter() {
+		operationFilter = (String) FacesUtility.getSessionMapValue("toolBrowseBean_OPERATION");
+		return operationFilter;
+	}
+
+	public void setOperationFilter(String operationFilter) {
+		this.operationFilter = operationFilter;
 	}
 
 	public void setConfigBean(TableConfigurator configBean) {
@@ -46,16 +57,17 @@ public class OperationBrowse implements InternalTableSelectionEventListener {
 	}
 
 
-	
 
 	public List<OperationItem> getOperationList() {
+		getOperationFilter();
 		operationList = new ArrayList<OperationItem>();
 		String site = SecurityContext.instance().getSite();
 		OperationDO operationDO = new OperationDO();
 		operationDO.setSite(site);
 		Collection<OperationDO> operationDOList = operationDOservice.readByExample(operationDO);
 		for (OperationDO operDO : operationDOList) {
-			if (operDO.getCurrentRevision()){
+		if (!(operationFilter==null)){
+		if (operDO.getCurrentRevision() && operDO.getOperation().startsWith(operationFilter)){ 	
 			OperationItem operationItem = new OperationItem();
 			operationItem.setOperation(operDO.getOperation());
 			operationItem.setVersion(operDO.getRevision());
@@ -63,6 +75,16 @@ public class OperationBrowse implements InternalTableSelectionEventListener {
 			operationItem.setCurrentversion(operDO.getCurrentRevision());
 			operationList.add(operationItem);
 			}
+		} else {
+		if (operDO.getCurrentRevision()){
+			OperationItem operationItem = new OperationItem();
+			operationItem.setOperation(operDO.getOperation());
+			operationItem.setVersion(operDO.getRevision());
+			operationItem.setDescription(operDO.getDescription());
+			operationItem.setCurrentversion(operDO.getCurrentRevision());
+			operationList.add(operationItem);
+			}
+		}
 		}
 		return operationList;
 	}
@@ -107,8 +129,9 @@ public class OperationBrowse implements InternalTableSelectionEventListener {
 	}
 
 	public void cancelAction() {
+		FacesUtility.removeSessionMapValue("toolBrowseBean_OPERATION");
+		operationFilter = null;
 		FacesUtility.addScriptCommand("window.close();");
-
 	}
 
 }

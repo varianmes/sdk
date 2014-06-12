@@ -15,8 +15,6 @@ import java.util.List;
 import javax.el.MethodExpression;
 import javax.faces.component.UIComponent;
 import javax.faces.convert.BooleanConverter;
-import javax.faces.event.AbortProcessingException;
-import javax.faces.event.ActionEvent;
 import javax.faces.event.MethodExpressionValueChangeListener;
 import javax.faces.event.ValueChangeEvent;
 import com.sap.me.common.ObjectReference;
@@ -65,6 +63,7 @@ import com.sap.me.wpmf.TableConfigurator;
 import com.sap.me.wpmf.util.FacesUtility;
 import com.sap.tc.ls.api.enumerations.LSMessageType;
 import com.sap.tc.ls.internal.faces.component.UIMessageBar;
+import com.sap.ui.faces.component.html.HtmlCommandButton;
 import com.sap.ui.faces.component.sap.HtmlCommandBooleanCheckbox;
 import com.varian.integration.connection.DataSourceConnection;
 import com.varian.lsf.tool.SfcSelectionItem;
@@ -102,16 +101,18 @@ public class LogToolPlugin extends BasePodPlugin {
 	private TableConfigurator tabletoolGroupBean = null;
 	private TableConfigurator tabletoolNumberBean = null;
 	String[] listColumnNames = new String[] { "SELECT", "SFC_NUMBER",
-			"SHOP_ORDER", "MATERIAL", "OPERATION", "RESOURCE", "QTY", "TOOL_STATUS" };
+			"SHOP_ORDER", "MATERIAL", "OPERATION", "RESOURCE", "QTY",
+			"TOOL_STATUS", "DETAILS" };
 	String[] columnDefs = new String[] { "select;TOOL_LOG.select.LABEL",
 			"sfcNumber;TOOL_LOG.sfc.LABEL",
 			"shopOrder;TOOL_LOG.shopOrder.LABEL",
 			"material;TOOL_LOG.material.LABEL",
 			"operation;TOOL_LOG.operation.LABEL",
 			"resource;TOOL_LOG.resource.LABEL", "qty;TOOL_LOG.qty.LABEL",
-			"toolStatus;TOOL_LOG.toolStatus.LABEL" };
+			"toolStatus;TOOL_LOG.toolStatus.LABEL",
+			"details;TOOL_LOG.details.LABEL" };
 	String[] toolgrouplistColumnNames = new String[] { "SELECT", "TOOL_GROUP",
-			"DESCRIPTION","STATUS", "REQUIRED_QTY" };
+			"DESCRIPTION", "STATUS", "REQUIRED_QTY" };
 	String[] toolgroupcolumnDefs = new String[] {
 			"select;TOOL_LOG.select.LABEL",
 			"toolGroup;TOOL_LOG.toolGroup.LABEL",
@@ -135,23 +136,51 @@ public class LogToolPlugin extends BasePodPlugin {
 	private OperationConfigurationServiceInterface operationConfigurationService;
 	private StatusServiceInterface statusService;
 	private ResourceConfigurationServiceInterface resourceConfigurationService;
-	private String filterOperation = null;
-	private String filterversion = null;
+	private String filterOperation = getCurrOperation();
 	private ItemConfigurationServiceInterface itemConfigurationService;
 	private ShopOrderServiceInterface shopOrderService;
 	private AttachmentConfigurationServiceInterface attachmentConfigurationService;
 	private ToolingConfigurationServiceInterface toolingConfigurationService;
 	private ToolLogServiceInterface toolLogService;
 
+	public String getCurrOperation() {
+		try {
+			this.filterOperation = getPodSelectionModel()
+					.getResolvedOperation().getOperation();
+		} catch (Exception e) {
+			this.filterOperation = null;
+		}
+		return filterOperation;
+	}
+
 	@Override
 	public void beforeLoad() throws Exception {
 		FacesUtility.setSessionMapValue("logToolBean", null);
+	}
+
+	public void closePlugin() {
+		clear();
+		closeCurrentPlugin();
+	}
+
+	public void processWindowClosed() {
+		FacesUtility.removeSessionMapValue("toolBrowseBean_SFC");
+		FacesUtility.removeSessionMapValue("toolBrowseBean_SFCREF");
+		FacesUtility.removeSessionMapValue("toolBrowseBean_OPERREF");
+		FacesUtility.removeSessionMapValue("toolBrowseBean_OPERATION");
+		FacesUtility.removeSessionMapValue("logToolBean");
+		FacesUtility.removeSessionMapValue("operationBrowseBean");
+
 	}
 
 	public LogToolPlugin() {
 	}
 
 	public void clear() {
+		FacesUtility.removeSessionMapValue("toolBrowseBean_SFC");
+		FacesUtility.removeSessionMapValue("toolBrowseBean_SFCREF");
+		FacesUtility.removeSessionMapValue("toolBrowseBean_OPERREF");
+		FacesUtility.removeSessionMapValue("toolBrowseBean_OPERATION");
 		FacesUtility.removeSessionMapValue("logToolBean");
 		FacesUtility.removeSessionMapValue("operationBrowseBean");
 		setMessageBar(false, null);
@@ -170,11 +199,6 @@ public class LogToolPlugin extends BasePodPlugin {
 		if (tablePanel2 != null) {
 			FacesUtility.addControlUpdate(tablePanel2);
 		}
-	}
-
-	public void processAction(ActionEvent arg0) throws AbortProcessingException {
-		// TODO Auto-generated method stub
-
 	}
 
 	protected HashMap<String, String> getColumnFieldMaping() {
@@ -215,13 +239,43 @@ public class LogToolPlugin extends BasePodPlugin {
 			// Lets try a check box for the boolean column
 			tableConfigBean.setCellEditor("SELECT",
 					new HtmlCommandBooleanCheckbox());
-			// let's add an event handler to this.
 			configureCellEditor("SELECT");
 			tableConfigBean
 					.setColumnConverter(new BooleanConverter(), "SELECT");
 			tableConfigBean.setColumnWidth("SELECT", "6em");
+			// Lets add a details column
+
+			tableConfigBean.setCellRenderer("DETAILS", new HtmlCommandButton());
+			configureCellRenderer("DETAILS");
 			tableConfigBean.configureTable();
 		}
+	}
+
+	private void configureCellRenderer(String colName) {
+		if (colName.equals("DETAILS")) {
+			HtmlCommandButton detailComp = (HtmlCommandButton) tableConfigBean
+					.getCellRenderer(colName);
+			String url = "/com/varian/icons/icon_detail.gif";
+			detailComp.setImage(url);
+			detailComp.setAlt("Details");
+			String binding = "#{logToolBean.processDetailsAction}";
+			MethodExpression lstnr = FacesUtility.createMethodExpression(
+					binding, null, new Class[0]);
+			detailComp.setActionExpression(lstnr);
+
+		}
+	}
+
+	public void processDetailsAction() {
+		SfcSelectionItem rowData = (SfcSelectionItem) tableConfigBean
+				.getTable().getRowData();
+		FacesUtility.setSessionMapValue("toolBrowseBean_SFC", rowData
+				.getSfcNumber());
+		FacesUtility.setSessionMapValue("toolBrowseBean_SFCREF", rowData
+				.getSfcRef());
+		FacesUtility.setSessionMapValue("toolBrowseBean_OPERREF", rowData
+				.getOpRef());
+		FacesUtility.addScriptCommand("window.sfcDetails();");
 	}
 
 	@SuppressWarnings("unchecked")
@@ -271,11 +325,20 @@ public class LogToolPlugin extends BasePodPlugin {
 		}
 	}
 
+	public void operBrowse() {
+		FacesUtility.setSessionMapValue("toolBrowseBean_OPERATION",
+				filterOperation);
+		FacesUtility.addScriptCommand("window.openBrowse();");
+	}
+
 	public void readSfcSelectionData() {
+		// StackTraceElement[] stackTraceElements =
+		// Thread.currentThread().getStackTrace();
 		initServices();
 		message = null;
 		setMessageBar(false, null);
 		String reqdQty = null;
+
 		try {
 			FindUserBySiteAndUserIdRequest request = new FindUserBySiteAndUserIdRequest(
 					"0536", userId);
@@ -335,9 +398,7 @@ public class LogToolPlugin extends BasePodPlugin {
 						.findResourceKeyDataByRef(objResRef);
 				StatusBasicConfiguration statusBasicConfig = statusService
 						.findStatusByRef(objStatusRef);
-				
-				
-			
+
 				sfcselectionitem.setSfcNumber(sfcBasicData.getSfc());
 				sfcselectionitem.setShopOrder(soBasicConfig.getShopOrder());
 				sfcselectionitem.setMaterial(itemBasicConfig.getItem());
@@ -389,8 +450,9 @@ public class LogToolPlugin extends BasePodPlugin {
 						String toolGrpref = toolGrprefList.get(0);
 						String attachmentRef = null;
 						// String currOpRefHash =
-						// currentOpRef.substring(0,currentOpRef.length()-1)+ "#";
-						//get reqd qty
+						// currentOpRef.substring(0,currentOpRef.length()-1)+
+						// "#";
+						// get reqd qty
 
 						ObjectReference objToolgrpRef = new ObjectReference(
 								toolGrpref);
@@ -418,17 +480,19 @@ public class LogToolPlugin extends BasePodPlugin {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
-						
+
 						//
-						
+
 						GetLoggedQuantityRequest logQtyReq = new GetLoggedQuantityRequest();
 						logQtyReq.setAttachmentRef(attachmentRef);
 						logQtyReq.setOperationRef(resolveOperReq.getRef());
 						logQtyReq.setSfcRef(sfcBasicData.getSfcRef());
 						BigDecimal loggedQty;
 						try {
-							loggedQty = toolLogService.getLoggedQuantity(logQtyReq);
-							if (loggedQty.intValueExact() < Integer.parseInt(reqdQty)) {
+							loggedQty = toolLogService
+									.getLoggedQuantity(logQtyReq);
+							if (loggedQty.intValueExact() < Integer
+									.parseInt(reqdQty)) {
 								pendingCount = pendingCount + 1;
 							}
 						} catch (BusinessException e) {
@@ -455,7 +519,7 @@ public class LogToolPlugin extends BasePodPlugin {
 				setMessageBar(true, LSMessageType.INFO);
 				return;
 			}
-			
+
 		} catch (BusinessException e) {
 			message = I18nUtility.getMessageForException(e);
 			setMessageBar(true, LSMessageType.ERROR);
@@ -496,8 +560,9 @@ public class LogToolPlugin extends BasePodPlugin {
 			tabletoolGroupBean
 					.setColumnBindings(gettoolGroupColumnFieldMaping());
 			tabletoolGroupBean.setListColumnNames(toolgrouplistColumnNames);
-			tabletoolGroupBean.setAllowSelections(false);
+			tabletoolGroupBean.setAllowSelections(true);
 			tabletoolGroupBean.setMultiSelectType(false);
+			tabletoolGroupBean.setSelectionBehavior("server");
 			ArrayList<String> editCols = new ArrayList<String>();
 			// make these columns editable
 			editCols.add("SELECT");
@@ -562,7 +627,7 @@ public class LogToolPlugin extends BasePodPlugin {
 		String attachmentRef = null;
 		String toolgroupStatus = null;
 		String expirydate = null;
-		
+
 		int sflag = 0;
 		toolGroupList.clear();
 		initServices();
@@ -629,23 +694,28 @@ public class LogToolPlugin extends BasePodPlugin {
 						toolgrpDesc = null;
 						reqdQty = null;
 						attachmentRef = null;
-						toolgroupStatus =null;
+						toolgroupStatus = null;
 						expirydate = null;
 						try {
 							ToolGroupFullConfiguration toolGrpFullConfig = toolingConfigurationService
 									.readToolGroup(objToolgrpRef);
 							toolgroup = toolGrpFullConfig.getToolGroup();
 							toolgrpDesc = toolGrpFullConfig.getDescription();
-							ObjectReference objStatusRef = new ObjectReference(toolGrpFullConfig.getStatusRef());
-							StatusBasicConfiguration statusBasicConfig = statusService.findStatusByRef(objStatusRef);
-							toolgroupStatus = statusBasicConfig.getStatusDescription();
-							if (!(toolGrpFullConfig.getExpirationDate()== null)){
-								String date =  toolGrpFullConfig.getExpirationDate().toString();
-								expirydate = date.substring(0,date.lastIndexOf("T"));
+							ObjectReference objStatusRef = new ObjectReference(
+									toolGrpFullConfig.getStatusRef());
+							StatusBasicConfiguration statusBasicConfig = statusService
+									.findStatusByRef(objStatusRef);
+							toolgroupStatus = statusBasicConfig
+									.getStatusDescription();
+							if (!(toolGrpFullConfig.getExpirationDate() == null)) {
+								String date = toolGrpFullConfig
+										.getExpirationDate().toString();
+								expirydate = date.substring(0, date
+										.lastIndexOf("T"));
 							}
 							List<ToolGroupAttachmentPoint> attachmentPointList = toolGrpFullConfig
 									.getAttachmentList();
-							
+
 							for (ToolGroupAttachmentPoint attachmentPoint : attachmentPointList) {
 								ObjectReference objAttachOperRef = new ObjectReference(
 										attachmentPoint.getOperationRef());
@@ -704,6 +774,8 @@ public class LogToolPlugin extends BasePodPlugin {
 					.getLocaleSpecificText("noToolGroups.MESSAGE");
 			setMessageBar(true, LSMessageType.INFO);
 			return;
+		} else {
+			setToolGroupList(toolGroupList);
 		}
 		UIComponent tablePanel = findComponent(FacesUtility.getFacesContext()
 				.getViewRoot(), "ToolLogPage:toolgroupdisplayPanel");
@@ -772,9 +844,10 @@ public class LogToolPlugin extends BasePodPlugin {
 				}
 				for (ToolNumberBasicConfiguration toolNumConfig : toolNumList) {
 					toolnumber = toolNumConfig.getToolNumber();
-					if (!(toolNumConfig.getExpirationDate() == null)){
-						String date = toolNumConfig.getExpirationDate().toString();
-						expirydate = date.substring(0,date.lastIndexOf("T"));
+					if (!(toolNumConfig.getExpirationDate() == null)) {
+						String date = toolNumConfig.getExpirationDate()
+								.toString();
+						expirydate = date.substring(0, date.lastIndexOf("T"));
 					}
 					ResourceStatusEnum toolStatus = toolNumConfig.getStatus();
 					toolNumberStatus = toolStatus.toString();
@@ -831,6 +904,7 @@ public class LogToolPlugin extends BasePodPlugin {
 				.getViewRoot(), "ToolLogPage:toolnumberdisplayPanel");
 		if (tablePanel != null) {
 			FacesUtility.addControlUpdate(tablePanel);
+
 		}
 	}
 
@@ -912,7 +986,7 @@ public class LogToolPlugin extends BasePodPlugin {
 			}
 		}
 		// check if all selected tool numbers have status enabled
-		//check for tool group and tool number  expiry
+		// check for tool group and tool number expiry
 
 		for (ToolNumberItem toolNumRow : toolNumberList) {
 			if (toolNumRow.isSelect()) {
@@ -922,74 +996,80 @@ public class LogToolPlugin extends BasePodPlugin {
 					setMessageBar(true, LSMessageType.ERROR);
 					return;
 				}
-				
-				if (!(toolNumRow.getToolNumExpDate()== null)){
-						Date currentDate = new Date();
-			            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-			            try {
-							Date expiryDate = sdf.parse(toolNumRow.getToolNumExpDate());
-							if (currentDate.after(expiryDate)){
-								message = FacesUtility.getLocaleSpecificText("Tool Number "
-										+ toolNumRow.getToolNumber() + " Calibration has expired");
-								setMessageBar(true, LSMessageType.ERROR);
-								return;
-							}
-						} catch (ParseException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
+
+				if (!(toolNumRow.getToolNumExpDate() == null)) {
+					Date currentDate = new Date();
+					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+					try {
+						Date expiryDate = sdf.parse(toolNumRow
+								.getToolNumExpDate());
+						if (currentDate.after(expiryDate)) {
+							message = FacesUtility
+									.getLocaleSpecificText("Tool Number "
+											+ toolNumRow.getToolNumber()
+											+ " Calibration has expired");
+							setMessageBar(true, LSMessageType.ERROR);
+							return;
 						}
+					} catch (ParseException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 			}
 		}
-		//check for tool group status
-		
-		for (ToolGroupItem toolGrpRow:toolGroupList){
+		// check for tool group status
+
+		for (ToolGroupItem toolGrpRow : toolGroupList) {
 			if (toolGrpRow.isSelect()) {
-				if (toolGrpRow.getStatus().equals("Disabled")){
+				if (toolGrpRow.getStatus().equals("Disabled")) {
 					message = FacesUtility.getLocaleSpecificText("Tool Group "
 							+ toolGrpRow.getToolGroup() + " is not enabled");
 					setMessageBar(true, LSMessageType.ERROR);
 					return;
 				}
-		
-			if (!(toolGrpRow.getToolGrpExpDate()== null)){
-				Date currentDate = new Date();
-	            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-	            try {
-					Date expiryDate = sdf.parse(toolGrpRow.getToolGrpExpDate());
-					if (currentDate.after(expiryDate)){
-						message = FacesUtility.getLocaleSpecificText("Tool Group "
-								+ toolGrpRow.getToolGroup() + " Calibration has expired");
-						setMessageBar(true, LSMessageType.ERROR);
-						return;
+
+				if (!(toolGrpRow.getToolGrpExpDate() == null)) {
+					Date currentDate = new Date();
+					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+					try {
+						Date expiryDate = sdf.parse(toolGrpRow
+								.getToolGrpExpDate());
+						if (currentDate.after(expiryDate)) {
+							message = FacesUtility
+									.getLocaleSpecificText("Tool Group "
+											+ toolGrpRow.getToolGroup()
+											+ " Calibration has expired");
+							setMessageBar(true, LSMessageType.ERROR);
+							return;
+						}
+					} catch (ParseException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
-				} catch (ParseException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
 				}
 			}
 		}
-		}
-	
-		
-		
-	
-		
+
 		for (SfcSelectionItem sfcRow : sfcSelectionItemList) {
 			if (sfcRow.isSelect() && sfcRow.getToolStatus().equals("Closed")) {
-				message = FacesUtility.getLocaleSpecificText("Tool logging for SFC "
-						+ sfcRow.getSfcNumber() + " is already Closed. Please unselect that Sfc and try again");
+				message = FacesUtility
+						.getLocaleSpecificText("Tool logging for SFC "
+								+ sfcRow.getSfcNumber()
+								+ " is already Closed. Please unselect that Sfc and try again");
 				setMessageBar(true, LSMessageType.ERROR);
 				return;
 			}
 			if (sfcRow.isSelect() && sfcRow.getToolStatus().equals("N/A")) {
-				message = FacesUtility.getLocaleSpecificText("Tool logging for SFC "
-						+ sfcRow.getSfcNumber() + " is not applicable. Please unselect that Sfc and try again");
+				message = FacesUtility
+						.getLocaleSpecificText("Tool logging for SFC "
+								+ sfcRow.getSfcNumber()
+								+ " is not applicable. Please unselect that Sfc and try again");
 				setMessageBar(true, LSMessageType.ERROR);
 				return;
 			}
 		}
-	
+
 		for (SfcSelectionItem sfcRow : sfcSelectionItemList) {
 			// get logged quantity
 			// if tool num is not enabled , throw error
@@ -1000,7 +1080,6 @@ public class LogToolPlugin extends BasePodPlugin {
 			// clear all tables
 
 			if (sfcRow.isSelect()) {
-				
 
 				for (ToolGroupItem toolgroupRow : toolGroupList) {
 					if (toolgroupRow.isSelect()) {
@@ -1074,21 +1153,21 @@ public class LogToolPlugin extends BasePodPlugin {
 								toolQtyItem.setToolNumber(objtoolNumRef);
 								toolQtyList.add(toolQtyItem);
 								logToolReq.setToolNumberList(toolQtyList);
-								try {								
-									toolLogService.logTool(logToolReq);									
+								try {
+									toolLogService.logTool(logToolReq);
 									// tool number is now logged, so tool number
 									// status needs to be reset to enabled,
 									// so that this tool can be logged for the
-									// next sfc		
+									// next sfc
 									Connection connect = DataSourceConnection
-									.getSQLConnection();								
+											.getSQLConnection();
 									PreparedStatement pstmt;
 									String updateStmnt = ("update TOOL_NUMBER set STATUS_BO = 'StatusBO:0536,301'"
 											+ " where HANDLE = '"
 											+ toolNumRow.getToolNumRef() + "'");
 									pstmt = connect
 											.prepareStatement(updateStmnt);
-									pstmt.executeUpdate();									
+									pstmt.executeUpdate();
 									connect.close();
 								} catch (ToolNumberCalibrationPeriodExpiredException e) {
 									// TODO Auto-generated catch block
@@ -1146,7 +1225,7 @@ public class LogToolPlugin extends BasePodPlugin {
 			}
 
 		}
-		//filterOperation = null;
+		// filterOperation = null;
 		toolGroupList.clear();
 		UIComponent tablePanel1 = findComponent(FacesUtility.getFacesContext()
 				.getViewRoot(), "ToolLogPage:toolgroupdisplayPanel");
@@ -1213,14 +1292,6 @@ public class LogToolPlugin extends BasePodPlugin {
 		this.filterOperation = filterOperation;
 	}
 
-	public String getFilterVersion() {
-		return filterversion;
-	}
-
-	public void setFilterVersion(String filterversion) {
-		this.filterversion = filterversion;
-	}
-
 	public List<ToolGroupItem> getToolGroupList() {
 		return toolGroupList;
 	}
@@ -1235,6 +1306,9 @@ public class LogToolPlugin extends BasePodPlugin {
 
 	public void setToolNumberList(List<ToolNumberItem> toolNumberList) {
 		this.toolNumberList = toolNumberList;
+	}
+
+	public void processDialogClosed() {
 	}
 
 }

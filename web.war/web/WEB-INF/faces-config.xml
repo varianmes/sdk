@@ -112,7 +112,7 @@
 			</map-entries>
 		</managed-property>
 	</managed-bean>
-	<!-- Defect 450  -->
+	<!-- Log Multi Tool  -->
     <managed-bean>
 		<managed-bean-name>toolLogBean</managed-bean-name>
 	<managed-bean-class>com.varian.lsf.tool.ToolLoggingScreenController</managed-bean-class>
@@ -217,6 +217,24 @@
 		<managed-property>
 			<property-name>beanName</property-name>
 			<value>logtoolNumberBeanConfigurator</value>
+		</managed-property>
+	</managed-bean>
+	<managed-bean>
+		<managed-bean-name>toolBrowseBean</managed-bean-name>
+		<managed-bean-class>com.varian.lsf.tool.ToolBrowseBean</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+		<managed-property>
+			<property-name>configBean</property-name>
+			<value>#{toolBrowseTableBeanConfigurator}</value>
+		</managed-property>
+	</managed-bean>
+	<managed-bean>
+		<managed-bean-name>toolBrowseTableBeanConfigurator</managed-bean-name>
+		<managed-bean-class>com.sap.me.wpmf.TableConfigurator</managed-bean-class>
+		<managed-bean-scope>session</managed-bean-scope>
+		<managed-property>
+			<property-name>beanName</property-name>
+			<value>toolBrowseTableBeanConfigurator</value>
 		</managed-property>
 	</managed-bean>
 </faces-config>
