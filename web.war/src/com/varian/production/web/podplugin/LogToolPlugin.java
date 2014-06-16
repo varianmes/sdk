@@ -560,9 +560,8 @@ public class LogToolPlugin extends BasePodPlugin {
 			tabletoolGroupBean
 					.setColumnBindings(gettoolGroupColumnFieldMaping());
 			tabletoolGroupBean.setListColumnNames(toolgrouplistColumnNames);
-			tabletoolGroupBean.setAllowSelections(true);
+			tabletoolGroupBean.setAllowSelections(false);
 			tabletoolGroupBean.setMultiSelectType(false);
-			tabletoolGroupBean.setSelectionBehavior("server");
 			ArrayList<String> editCols = new ArrayList<String>();
 			// make these columns editable
 			editCols.add("SELECT");
