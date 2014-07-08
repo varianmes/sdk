@@ -210,7 +210,7 @@
 					<ls:matrixLayoutRow facet="rows" id="row40">
 						<ls:matrixLayoutCell facet="cells" id="cell40"
 							cellBackgroundDesign="TRANSPARENT" cellDesign="PADLESS"
-							HAlign="LEFT" width="40%" height="65%">
+							HAlign="LEFT" width="55%" height="65%">
 							<ls:label text="   " visibility="BLANK" />
 							<ls:label facet="content" design="EMPHASIZED"
 								text="New Assembly Operation" doubleClickInfoEnabled="false"
@@ -250,14 +250,7 @@
 						</ls:matrixLayoutCell>
 						<ls:matrixLayoutCell facet="cells" id="cell407"
 							cellBackgroundDesign="TRANSPARENT" cellDesign="PADLESS"
-							HAlign="LEFT" width="15%" height="65%">
-							<ls:label text="   " visibility="BLANK" />
-							<ls:label text="   " visibility="BLANK" />
-							<ls:label text="   " visibility="BLANK" />
-							<ls:label text="   " visibility="BLANK" />
-							<ls:label text="   " visibility="BLANK" />
-							<ls:label text="   " visibility="BLANK" />
-							<ls:label text="   " visibility="BLANK" />
+							HAlign="LEFT" width="10%" height="65%">
 							<ls:label text="   " visibility="BLANK" />
 							<ls:label facet="content" design="EMPHASIZED"
 								text="Current Version" doubleClickInfoEnabled="false"
@@ -265,30 +258,11 @@
 						</ls:matrixLayoutCell>
 						<ls:matrixLayoutCell facet="cells" id="cell408"
 							cellBackgroundDesign="TRANSPARENT" cellDesign="PADLESS"
-							HAlign="LEFT" width="15%" height="65%">
+							HAlign="LEFT" width="10%" height="65%">
 						<ls:label text="   " visibility="BLANK" />
-							<ls:label text="   " visibility="BLANK" />
-							<ls:label text="   " visibility="BLANK" />
-							<ls:label text="   " visibility="BLANK" />
-							<ls:label text="   " visibility="BLANK" />
-							<ls:label text="   " visibility="BLANK" />
-							<ls:label text="   " visibility="BLANK" />
-							<ls:label text="   " visibility="BLANK" />
 							<ls:label facet="content" design="EMPHASIZED"
-								text="Current Versiond" doubleClickInfoEnabled="false"
+								text="Current Version" doubleClickInfoEnabled="false"
 								hasIcon="false" visibility="BLANK"/>	
-						</ls:matrixLayoutCell>
-						<ls:matrixLayoutCell facet="cells" id="cell409"
-							cellBackgroundDesign="TRANSPARENT" cellDesign="PADLESS"
-							HAlign="LEFT" width="5%" height="65%">
-							<ls:label text="   " visibility="BLANK" />
-							<ls:label text="   " visibility="BLANK" />
-							<ls:label text="   " visibility="BLANK" />
-							<ls:label text="   " visibility="BLANK" />
-							<ls:label text="   " visibility="BLANK" />
-							<ls:label text="   " visibility="BLANK" />
-							<ls:label text="   " visibility="BLANK" />
-							<ls:label text="   " visibility="BLANK" />
 						</ls:matrixLayoutCell>
 					</ls:matrixLayoutRow>
 					<ls:matrixLayoutRow facet="rows">
