@@ -54,10 +54,24 @@
 				value="#{sap:toClientId('toolDetailsBrowseForm')}" />
 			<ls:matrixLayout facet="content" id="displayPanelLayout" width="100%"
 				height="100%">
+				<ls:matrixLayoutRow facet="rows" id="row56">
+					<ls:matrixLayoutCell facet="cells" cellDesign="PADLESS"
+						width="100%" height="10%" HAlign="LEFT">
+				<ls:label facet="content" design="EMPHASIZED" text="Selected SFC is"
+								doubleClickInfoEnabled="false" hasIcon="false"
+								width="6em" />
+				<ls:inputField facet="content" id="SelSfc" name="SelSfc"
+								upperCase="true" changeInfoParameters="#{sap:deltaUpdateId(sap:toClientId('toolDetailsBrowseForm'))}"
+								fieldHelpPressInfoEnabled="false" width="10em"
+								showHelpButton="false" value="#{toolBrowseBean.sfc}" readonly="true"
+								changeInfoEnabled="true" changeInfoResponseData="delta"
+								changeInfoClientAction="submit" hideFieldHelp="true" />	
+				</ls:matrixLayoutCell>
+				</ls:matrixLayoutRow>
 				<ls:matrixLayoutRow facet="rows" id="row4">
 					<ls:matrixLayoutCell facet="cells" id="cell4"
 						cellBackgroundDesign="TRANSPARENT" cellDesign="PADLESS"
-						HAlign="CENTER" width="100%" height="80%">
+						HAlign="CENTER" width="100%" height="70%">
 						<ls:panel facet="content" id="displayPanel"
 							title="#{gapiI18nTransformer['TOOL_DETAILS.title.DESC']}"
 							width="100%" height="100%" hasEditableTitle="false"

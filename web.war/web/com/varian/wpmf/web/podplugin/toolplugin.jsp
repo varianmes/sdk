@@ -213,17 +213,14 @@
 			</ls:matrixLayoutRow>
 				<ls:matrixLayoutRow facet="rows">
 					<ls:matrixLayoutCell facet="cells" cellDesign="PADLESS" width="100%" height="5%" VAlign="BOTTOM" HAlign="CENTER"  hasBorder="false">
-						<ls:button text="Retrieve Tool Numbers"
+						<ls:button text="RetrieveTN"
 							action="#{logToolBean.retrieveToolNumbers}"
 							pressInfoEnabled="true"
 							enabled="true"
 							rendered="true"
 							pressInfoClientAction="submit"
 							pressInfoResponseData="delta"
-							pressInfoParameters="#{sap:deltaUpdateId(sap:toClientId('toolGroupList'))}" />
-						<ls:label text="" width="2px" designBar="LIGHT"/>
-						<ls:label text="" width="2px" designBar="LIGHT"/>
-						<ls:label text="" width="2px" designBar="LIGHT"/>
+							pressInfoParameters="#{sap:deltaUpdateId(sap:toClientId('toolGroupList'))}" visibility="BLANK"/>
 						<ls:button text="Log Tool Numbers"
 							action="#{logToolBean.logToolNumbers}"
 							pressInfoEnabled="true"

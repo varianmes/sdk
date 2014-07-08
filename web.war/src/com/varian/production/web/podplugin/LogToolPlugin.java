@@ -59,7 +59,9 @@ import com.sap.me.tooling.ToolingConfigurationServiceInterface;
 import com.sap.me.user.FindUserBySiteAndUserIdRequest;
 import com.sap.me.user.UserBasicConfiguration;
 import com.sap.me.user.UserConfigurationServiceInterface;
+import com.sap.me.wpmf.InternalTableSelectionEventListener;
 import com.sap.me.wpmf.TableConfigurator;
+import com.sap.me.wpmf.TableSelectionEvent;
 import com.sap.me.wpmf.util.FacesUtility;
 import com.sap.tc.ls.api.enumerations.LSMessageType;
 import com.sap.tc.ls.internal.faces.component.UIMessageBar;
@@ -71,7 +73,7 @@ import com.varian.lsf.tool.ToolGroupItem;
 import com.varian.lsf.tool.ToolNumberItem;
 import com.visiprise.frame.service.ext.SecurityContext;
 
-public class LogToolPlugin extends BasePodPlugin {
+public class LogToolPlugin extends BasePodPlugin implements InternalTableSelectionEventListener{
 
 	private static final String TOOL_LOG_SERVICE = "ToolLogService";
 	private static final String TOOLING_CONFIGURATION_SERVICE = "ToolingConfigurationService";
@@ -111,10 +113,9 @@ public class LogToolPlugin extends BasePodPlugin {
 			"resource;TOOL_LOG.resource.LABEL", "qty;TOOL_LOG.qty.LABEL",
 			"toolStatus;TOOL_LOG.toolStatus.LABEL",
 			"details;TOOL_LOG.details.LABEL" };
-	String[] toolgrouplistColumnNames = new String[] { "SELECT", "TOOL_GROUP",
+	String[] toolgrouplistColumnNames = new String[] {"TOOL_GROUP",
 			"DESCRIPTION", "STATUS", "REQUIRED_QTY" };
 	String[] toolgroupcolumnDefs = new String[] {
-			"select;TOOL_LOG.select.LABEL",
 			"toolGroup;TOOL_LOG.toolGroup.LABEL",
 			"toolgrpDesc;TOOL_LOG.toolgrpDesc.LABEL",
 			"status;TOOL_LOG.status.LABEL",
@@ -155,25 +156,25 @@ public class LogToolPlugin extends BasePodPlugin {
 
 	@Override
 	public void beforeLoad() throws Exception {
-		FacesUtility.setSessionMapValue("logToolBean", null);
-	}
-
-	public void closePlugin() {
-		clear();
-		closeCurrentPlugin();
-	}
-
-	public void processWindowClosed() {
 		FacesUtility.removeSessionMapValue("toolBrowseBean_SFC");
 		FacesUtility.removeSessionMapValue("toolBrowseBean_SFCREF");
 		FacesUtility.removeSessionMapValue("toolBrowseBean_OPERREF");
 		FacesUtility.removeSessionMapValue("toolBrowseBean_OPERATION");
-		FacesUtility.removeSessionMapValue("logToolBean");
 		FacesUtility.removeSessionMapValue("operationBrowseBean");
+		sfcSelectionItemList.clear();
+		toolGroupList.clear();
+		toolNumberList.clear();
+		filterOperation = null;
+		getCurrOperation();
+	}
 
+	public void closePlugin() {
+		clear();
+		FacesUtility.addScriptCommand("window.close();");
 	}
 
 	public LogToolPlugin() {
+	
 	}
 
 	public void clear() {
@@ -181,8 +182,12 @@ public class LogToolPlugin extends BasePodPlugin {
 		FacesUtility.removeSessionMapValue("toolBrowseBean_SFCREF");
 		FacesUtility.removeSessionMapValue("toolBrowseBean_OPERREF");
 		FacesUtility.removeSessionMapValue("toolBrowseBean_OPERATION");
-		FacesUtility.removeSessionMapValue("logToolBean");
 		FacesUtility.removeSessionMapValue("operationBrowseBean");
+		sfcSelectionItemList.clear();
+		toolGroupList.clear();
+		toolNumberList.clear();
+		tabletoolGroupBean.setSelectedRows(null);
+		filterOperation= null;
 		setMessageBar(false, null);
 		UIComponent tablePanel = findComponent(FacesUtility.getFacesContext()
 				.getViewRoot(), "ToolLogPage:displayPanel");
@@ -244,7 +249,6 @@ public class LogToolPlugin extends BasePodPlugin {
 					.setColumnConverter(new BooleanConverter(), "SELECT");
 			tableConfigBean.setColumnWidth("SELECT", "6em");
 			// Lets add a details column
-
 			tableConfigBean.setCellRenderer("DETAILS", new HtmlCommandButton());
 			configureCellRenderer("DETAILS");
 			tableConfigBean.configureTable();
@@ -295,13 +299,6 @@ public class LogToolPlugin extends BasePodPlugin {
 
 	}
 
-	/**
-	 * The value change event handler for editable cells that modify cell
-	 * values. This keeps track of modified rows.
-	 * 
-	 * @param event
-	 *            the value change event.
-	 */
 	public void processEditCellChange(ValueChangeEvent event) {
 		String oldVal = (event.getOldValue() != null) ? event.getOldValue()
 				.toString() : "";
@@ -477,11 +474,9 @@ public class LogToolPlugin extends BasePodPlugin {
 								}
 							}
 						} catch (BusinessException e) {
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
 
-						//
 
 						GetLoggedQuantityRequest logQtyReq = new GetLoggedQuantityRequest();
 						logQtyReq.setAttachmentRef(attachmentRef);
@@ -536,7 +531,7 @@ public class LogToolPlugin extends BasePodPlugin {
 		if (tablePanel != null) {
 			FacesUtility.addControlUpdate(tablePanel);
 		}
-
+		tabletoolGroupBean.setSelectedRows(null);
 	}
 
 	protected HashMap<String, String> gettoolGroupColumnFieldMaping() {
@@ -560,20 +555,12 @@ public class LogToolPlugin extends BasePodPlugin {
 			tabletoolGroupBean
 					.setColumnBindings(gettoolGroupColumnFieldMaping());
 			tabletoolGroupBean.setListColumnNames(toolgrouplistColumnNames);
-			tabletoolGroupBean.setAllowSelections(false);
-			tabletoolGroupBean.setMultiSelectType(false);
-			ArrayList<String> editCols = new ArrayList<String>();
-			// make these columns editable
-			editCols.add("SELECT");
-			tabletoolGroupBean.setEditableColumns(editCols);
-			// Lets try a check box for the boolean column
-			tabletoolGroupBean.setCellEditor("SELECT",
-					new HtmlCommandBooleanCheckbox());
-			// let's add an event handler to this.
-			configureCellEditor("SELECT");
-			tabletoolGroupBean.setColumnConverter(new BooleanConverter(),
-					"SELECT");
-			tabletoolGroupBean.setColumnWidth("SELECT", "5em");
+			tabletoolGroupBean.setAllowSelections(true);
+			tabletoolGroupBean.setMultiSelectType(true);
+			tabletoolGroupBean.setSelectionBehavior("server");
+			// enable row double click
+			//copyOperconfigBean.setDoubleClick(true);
+			tabletoolGroupBean.addInternalTableSelectionEventListener(this);
 			tabletoolGroupBean.configureTable();
 		}
 	}
@@ -729,7 +716,6 @@ public class LogToolPlugin extends BasePodPlugin {
 								}
 							}
 						} catch (BusinessException e) {
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
 						if (toolGroupList.size() > 0) {
@@ -781,9 +767,10 @@ public class LogToolPlugin extends BasePodPlugin {
 		if (tablePanel != null) {
 			FacesUtility.addControlUpdate(tablePanel);
 		}
-
+		tabletoolGroupBean.setSelectedRows(null);
 	}
 
+	@SuppressWarnings("unchecked")
 	public void retrieveToolNumbers() {
 		message = null;
 		setMessageBar(false, null);
@@ -791,9 +778,9 @@ public class LogToolPlugin extends BasePodPlugin {
 		String toolNumberStatus = null;
 		String expirydate = null;
 		int sflag = 0;
-		int tgflag = 0;
 		toolNumberList.clear();
 		initServices();
+		List<ToolGroupItem> selToolGrpList = (List<ToolGroupItem>) tabletoolGroupBean.getSelectedItems();
 		if (sfcSelectionItemList.size() == 0) {
 			message = FacesUtility.getLocaleSpecificText("noRecords.MESSAGE");
 			setMessageBar(true, LSMessageType.ERROR);
@@ -811,26 +798,8 @@ public class LogToolPlugin extends BasePodPlugin {
 				return;
 			}
 		}
-		if (toolGroupList.size() == 0) {
-			message = FacesUtility
-					.getLocaleSpecificText("noToolGroups.MESSAGE");
-			setMessageBar(true, LSMessageType.ERROR);
-			return;
-		} else {
-			for (ToolGroupItem toolgrpRow : toolGroupList) {
-				if (toolgrpRow.isSelect()) {
-					tgflag = 1;
-				}
-			}
-			if (tgflag == 0) {
-				message = FacesUtility
-						.getLocaleSpecificText("noToolGroupsSelected.MESSAGE");
-				setMessageBar(true, LSMessageType.ERROR);
-				return;
-			}
-		}
-		for (ToolGroupItem toolGrprow : toolGroupList) {
-			if (toolGrprow.isSelect()) {
+	
+		for (ToolGroupItem toolGrprow : selToolGrpList) {
 				FindToolNumbersByToolGroupAndFilterRequest toolNumReq = new FindToolNumbersByToolGroupAndFilterRequest();
 				toolNumReq.setToolGroupRef(toolGrprow.getToolGroupRef());
 				List<ToolNumberBasicConfiguration> toolNumList = null;
@@ -838,7 +807,6 @@ public class LogToolPlugin extends BasePodPlugin {
 					toolNumList = toolingConfigurationService
 							.findToolNumbersByToolGroupAndFilterByName(toolNumReq);
 				} catch (BusinessException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				for (ToolNumberBasicConfiguration toolNumConfig : toolNumList) {
@@ -891,7 +859,7 @@ public class LogToolPlugin extends BasePodPlugin {
 					}
 				}
 
-			}
+			
 		}
 		if (toolNumberList.size() == 0) {
 			message = FacesUtility
@@ -905,14 +873,15 @@ public class LogToolPlugin extends BasePodPlugin {
 			FacesUtility.addControlUpdate(tablePanel);
 
 		}
+		selToolGrpList.clear();
 	}
 
+	@SuppressWarnings("unchecked")
 	public void logToolNumbers() throws SQLException {
 		message = null;
 		setMessageBar(false, null);
 		initServices();
 		int sflag = 0;
-		int tgflag = 0;
 		int tnflag = 0;
 		if (sfcSelectionItemList.size() == 0) {
 			message = FacesUtility.getLocaleSpecificText("noRecords.MESSAGE");
@@ -927,24 +896,6 @@ public class LogToolPlugin extends BasePodPlugin {
 			if (sflag == 0) {
 				message = FacesUtility
 						.getLocaleSpecificText("noSFCsSelected.MESSAGE");
-				setMessageBar(true, LSMessageType.ERROR);
-				return;
-			}
-		}
-		if (toolGroupList.size() == 0) {
-			message = FacesUtility
-					.getLocaleSpecificText("noToolGroups.MESSAGE");
-			setMessageBar(true, LSMessageType.ERROR);
-			return;
-		} else {
-			for (ToolGroupItem toolgrpRow : toolGroupList) {
-				if (toolgrpRow.isSelect()) {
-					tgflag = 1;
-				}
-			}
-			if (tgflag == 0) {
-				message = FacesUtility
-						.getLocaleSpecificText("noToolGroupsSelected.MESSAGE");
 				setMessageBar(true, LSMessageType.ERROR);
 				return;
 			}
@@ -967,7 +918,7 @@ public class LogToolPlugin extends BasePodPlugin {
 				return;
 			}
 		}
-
+		List<ToolGroupItem> selToolGrpList = (List<ToolGroupItem>) tabletoolGroupBean.getSelectedItems();
 		// check if only one tool number form each tool group is selected
 		ArrayList<String> myList = new ArrayList<String>();
 		for (ToolNumberItem toolNumRow : toolNumberList) {
@@ -1011,7 +962,6 @@ public class LogToolPlugin extends BasePodPlugin {
 							return;
 						}
 					} catch (ParseException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}
@@ -1019,8 +969,7 @@ public class LogToolPlugin extends BasePodPlugin {
 		}
 		// check for tool group status
 
-		for (ToolGroupItem toolGrpRow : toolGroupList) {
-			if (toolGrpRow.isSelect()) {
+		for (ToolGroupItem toolGrpRow : selToolGrpList) {
 				if (toolGrpRow.getStatus().equals("Disabled")) {
 					message = FacesUtility.getLocaleSpecificText("Tool Group "
 							+ toolGrpRow.getToolGroup() + " is not enabled");
@@ -1043,13 +992,11 @@ public class LogToolPlugin extends BasePodPlugin {
 							return;
 						}
 					} catch (ParseException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}
-			}
 		}
-
+	
 		for (SfcSelectionItem sfcRow : sfcSelectionItemList) {
 			if (sfcRow.isSelect() && sfcRow.getToolStatus().equals("Closed")) {
 				message = FacesUtility
@@ -1077,11 +1024,10 @@ public class LogToolPlugin extends BasePodPlugin {
 			// log tool
 			// publish message
 			// clear all tables
-
+			
 			if (sfcRow.isSelect()) {
 
-				for (ToolGroupItem toolgroupRow : toolGroupList) {
-					if (toolgroupRow.isSelect()) {
+				for (ToolGroupItem toolgroupRow : selToolGrpList) {
 						GetLoggedQuantityRequest logQtyReq = new GetLoggedQuantityRequest();
 						logQtyReq.setAttachmentRef(toolgroupRow
 								.getAttachmentRef());
@@ -1097,7 +1043,6 @@ public class LogToolPlugin extends BasePodPlugin {
 									loggedQty = toolLogService
 											.getLoggedQuantity(logQtyReq);
 								} catch (BusinessException e) {
-									// TODO Auto-generated catch block
 									e.printStackTrace();
 								}
 								int requiredQty = Integer.parseInt(toolgroupRow
@@ -1169,7 +1114,6 @@ public class LogToolPlugin extends BasePodPlugin {
 									pstmt.executeUpdate();
 									connect.close();
 								} catch (ToolNumberCalibrationPeriodExpiredException e) {
-									// TODO Auto-generated catch block
 									message = "Calibration period for tool number "
 											+ toolNumRow.getToolNumber()
 											+ " or tool group "
@@ -1179,7 +1123,6 @@ public class LogToolPlugin extends BasePodPlugin {
 									e.printStackTrace();
 									return;
 								} catch (InvalidLoggedQuantityException e) {
-									// TODO Auto-generated catch block
 									message = "Logged qty for tool number "
 											+ toolNumRow.getToolNumber()
 											+ " is Invalid.";
@@ -1187,7 +1130,6 @@ public class LogToolPlugin extends BasePodPlugin {
 									e.printStackTrace();
 									return;
 								} catch (InvalidToolGroupStatusException e) {
-									// TODO Auto-generated catch block
 									message = "Status of tool group "
 											+ toolNumRow.getToolGroup()
 											+ " is Invalid.";
@@ -1195,7 +1137,6 @@ public class LogToolPlugin extends BasePodPlugin {
 									e.printStackTrace();
 									return;
 								} catch (InvalidToolNumberStatusException e) {
-									// TODO Auto-generated catch block
 									message = "Status of tool number "
 											+ toolNumRow.getToolNumber()
 											+ " is Invalid.";
@@ -1204,7 +1145,6 @@ public class LogToolPlugin extends BasePodPlugin {
 									return;
 
 								} catch (BusinessException e) {
-									// TODO Auto-generated catch block
 									message = "Unknown Business Exception. Please report to System Adminstrator or Developer";
 									setMessageBar(true, LSMessageType.ERROR);
 									e.printStackTrace();
@@ -1219,7 +1159,6 @@ public class LogToolPlugin extends BasePodPlugin {
 
 							}
 						}
-					}
 				}
 			}
 
@@ -1240,6 +1179,7 @@ public class LogToolPlugin extends BasePodPlugin {
 		readSfcSelectionData();
 		message = "Tools are logged for all the selected SFCs Successfully";
 		setMessageBar(true, LSMessageType.OK);
+		selToolGrpList.clear();
 	}
 
 	/**
@@ -1308,6 +1248,17 @@ public class LogToolPlugin extends BasePodPlugin {
 	}
 
 	public void processDialogClosed() {
+	}
+
+	public void processTableSelectionEvent(TableSelectionEvent event) {
+		TableConfigurator conf = (TableConfigurator) event.getSource();
+		if (!tabletoolGroupBean.equals(conf)) {
+			return;
+		}
+	//	Object selectedObject = event.getCurrentSelection();
+	//	if (selectedObject instanceof ToolGroupItem) {			
+		retrieveToolNumbers();
+		//}
 	}
 
 }
