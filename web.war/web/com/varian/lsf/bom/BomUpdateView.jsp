@@ -77,7 +77,7 @@
 					</ls:matrixLayoutRow>
 				</ls:matrixLayout>
 				<ls:matrixLayout facet="content" id="selectionPanelLayout"
-					width="40%" height="80%">
+					width="65%" height="80%">
 					<ls:matrixLayoutRow facet="rows" id="row2">
 						<ls:matrixLayoutCell facet="cells" id="cell62"
 							cellBackgroundDesign="TRANSPARENT" cellDesign="PADLESS"
@@ -95,6 +95,22 @@
 								<f:selectItem itemValue="NOTUSED" itemLabel="NotUsed" />
 								<f:selectItem itemValue="BOTH" itemLabel="Both" />
 							</sap:commandOneMenu>
+						</ls:matrixLayoutCell>
+						<ls:matrixLayoutCell facet="cells" id="cell69"
+							cellBackgroundDesign="TRANSPARENT" cellDesign="PADLESS"
+							HAlign="FORCEDLEFT" width="3%" height="80%" VAlign="MIDDLE">
+							<ls:label text="   " visibility="BLANK" />
+							<ls:label facet="content" design="EMPHASIZED"
+								text="Bom Number Filter" />
+						</ls:matrixLayoutCell>
+						<ls:matrixLayoutCell facet="cells" id="cell29"
+							cellBackgroundDesign="TRANSPARENT" cellDesign="PADLESS"
+							HAlign="FORCEDLEFT" width="22%" height="80%" VAlign="MIDDLE">
+							<ls:inputField facet="content" id="SearchbyBOM" name="SearchbyBOM"
+								upperCase="true" width="10em" changeInfoEnabled="true"
+								changeInfoParameters="#{sap:deltaUpdateId(sap:toClientId('fieldButtonPanel'))}"
+								enterInfoEnabled="true"	value="#{bomUpdateBean.bomFilter}"							
+								changeInfoResponseData="delta"/>
 						</ls:matrixLayoutCell>
 						<ls:matrixLayoutCell facet="cells" id="cell1221"
 							cellBackgroundDesign="TRANSPARENT" cellDesign="PADLESS"

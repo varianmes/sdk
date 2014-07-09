@@ -43,7 +43,7 @@ import com.varian.integration.connection.DataSourceConnection;
  * 
  */
 public class BomUpdateController extends BaseManagedBean implements
-		ActionListener,InternalTableSelectionEventListener {
+		ActionListener, InternalTableSelectionEventListener {
 
 	private static final String OPERATION_CONFIGURATION_SERVICE = "OperationConfigurationService";
 	private static final String ITEM_CONFIGURATION_SERVICE = "ItemConfigurationService";
@@ -57,11 +57,14 @@ public class BomUpdateController extends BaseManagedBean implements
 	private List<BomComponentItem> bomComponentList = new ArrayList<BomComponentItem>();
 	private TableConfigurator tableBomConfigBean = null;
 	private TableConfigurator tableBomComponentBean = null;
-	String[] bomDisplayListColumnNames = new String[] { "BOM", "REVISION" ,"BOM_STATUS","CURRENT_VERSION"};
+	String[] bomDisplayListColumnNames = new String[] { "BOM", "REVISION",
+			"BOM_STATUS", "CURRENT_VERSION" };
 	String[] bomDisplaycolumnDefs = new String[] { "bom;BOM_UPDATE.bom.LABEL",
-			"revision;BOM_UPDATE.revision.LABEL","bomStatus;BOM_UPDATE.bomStatus.LABEL","isCurrVersion;BOM_UPDATE.isCurrVersion.LABEL" };
-	String[] bomComponentListColumnNames = new String[] { "SEQUENCE","COMPONENT_VERSION",
-			"OPERATION", "NEW_OPERATION" };
+			"revision;BOM_UPDATE.revision.LABEL",
+			"bomStatus;BOM_UPDATE.bomStatus.LABEL",
+			"isCurrVersion;BOM_UPDATE.isCurrVersion.LABEL" };
+	String[] bomComponentListColumnNames = new String[] { "SEQUENCE",
+			"COMPONENT_VERSION", "OPERATION", "NEW_OPERATION" };
 	String[] bomComponentcolumnDefs = new String[] {
 			"assySequence;BOM_UPDATE.assySequence.LABEL",
 			"component;BOM_UPDATE.component.LABEL",
@@ -75,6 +78,7 @@ public class BomUpdateController extends BaseManagedBean implements
 	private BOMConfigurationServiceInterface bOMConfigurationService;
 	private ItemConfigurationServiceInterface itemConfigurationService;
 	private OperationConfigurationServiceInterface operationConfigurationService;
+	private String bomFilter = null;
 
 	public BomUpdateController() {
 
@@ -102,14 +106,29 @@ public class BomUpdateController extends BaseManagedBean implements
 		Connection connect = DataSourceConnection.getSQLConnection();
 		PreparedStatement pstmt;
 		String selBoms = null;
-		if (newCheckBoxSelection.equals("NEW")) {
-			selBoms = ("select HANDLE, BOM, REVISION,STATUS_BO,CURRENT_REVISION from BOM where status_bo = 'StatusBO:0536,205' and BOM_TYPE = 'U' and has_been_released = 'false'");
-		} else if (newCheckBoxSelection.equals("NOTUSED")) {
-			selBoms = ("select HANDLE, BOM, REVISION,STATUS_BO,CURRENT_REVISION from BOM where status_bo = 'StatusBO:0536,201' and BOM_TYPE = 'U' and has_been_released = 'false'");
+		if (!(bomFilter==null)){
+			if (newCheckBoxSelection.equals("NEW")) {
+				selBoms = ("select HANDLE, BOM, REVISION,STATUS_BO,CURRENT_REVISION from BOM where status_bo = 'StatusBO:0536,205' and BOM_TYPE = 'U' and has_been_released = 'false' and bom like '"
+						+ bomFilter + "%' ORDER BY BOM");
+			} else if (newCheckBoxSelection.equals("NOTUSED")) {
+				selBoms = ("select HANDLE, BOM, REVISION,STATUS_BO,CURRENT_REVISION from BOM where status_bo = 'StatusBO:0536,201' and BOM_TYPE = 'U' and has_been_released = 'false' and bom like '"
+						+ bomFilter + "%' ORDER BY BOM");
+			} else {
+				selBoms = ("select HANDLE, BOM, REVISION,STATUS_BO,CURRENT_REVISION from BOM where status_bo = 'StatusBO:0536,205'and has_been_released = 'false' and BOM_TYPE = 'U' and bom like '"
+						+ bomFilter + "%' union"
+						+ " select HANDLE, BOM, REVISION,STATUS_BO,CURRENT_REVISION from BOM where status_bo = 'StatusBO:0536,201' and BOM_TYPE = 'U' and has_been_released = 'false' and bom like '"
+						+ bomFilter + "%' ORDER BY BOM");
+			}
 		} else {
-			selBoms = ("select HANDLE, BOM, REVISION,STATUS_BO,CURRENT_REVISION from BOM where status_bo = 'StatusBO:0536,205'and has_been_released = 'false' and BOM_TYPE = 'U' union"
-					+ " select HANDLE, BOM, REVISION,STATUS_BO,CURRENT_REVISION from BOM where status_bo = 'StatusBO:0536,201' and BOM_TYPE = 'U' and has_been_released = 'false'");
-		}
+			if (newCheckBoxSelection.equals("NEW")) {
+				selBoms = ("select HANDLE, BOM, REVISION,STATUS_BO,CURRENT_REVISION from BOM where status_bo = 'StatusBO:0536,205' and BOM_TYPE = 'U' and has_been_released = 'false' ORDER BY BOM");
+			} else if (newCheckBoxSelection.equals("NOTUSED")) {
+				selBoms = ("select HANDLE, BOM, REVISION,STATUS_BO,CURRENT_REVISION from BOM where status_bo = 'StatusBO:0536,201' and BOM_TYPE = 'U' and has_been_released = 'false' ORDER BY BOM");
+			} else {
+				selBoms = ("select HANDLE, BOM, REVISION,STATUS_BO,CURRENT_REVISION from BOM where status_bo = 'StatusBO:0536,205'and has_been_released = 'false' and BOM_TYPE = 'U' union"
+						+ " select HANDLE, BOM, REVISION,STATUS_BO,CURRENT_REVISION from BOM where status_bo = 'StatusBO:0536,201' and BOM_TYPE = 'U' and has_been_released = 'false' ORDER BY BOM");
+			}
+		} 
 		pstmt = connect.prepareStatement(selBoms);
 		pstmt.executeQuery();
 		ResultSet rs = pstmt.getResultSet();
@@ -119,9 +138,9 @@ public class BomUpdateController extends BaseManagedBean implements
 			bomDisplayitem.setBom(rs.getString("BOM"));
 			bomDisplayitem.setRevision(rs.getString("REVISION"));
 			bomDisplayitem.setBomRef(rs.getString("HANDLE"));
-			if (rs.getString("STATUS_BO").equals("StatusBO:0536,201")){
+			if (rs.getString("STATUS_BO").equals("StatusBO:0536,201")) {
 				bomDisplayitem.setBomStatus("Releasable");
-			} else if (rs.getString("STATUS_BO").equals("StatusBO:0536,205")){
+			} else if (rs.getString("STATUS_BO").equals("StatusBO:0536,205")) {
 				bomDisplayitem.setBomStatus("New");
 			}
 			bomDisplayitem.setIsCurrVersion(rs.getString("CURRENT_REVISION"));
@@ -140,7 +159,7 @@ public class BomUpdateController extends BaseManagedBean implements
 		}
 		// add now
 		tableBomConfigBean.setSelectedRows(null);
-		//add now
+		// add now
 		bomComponentList.clear();
 		UIComponent tablePanel1 = findComponent(FacesUtility.getFacesContext()
 				.getViewRoot(), "bomUpdateForm:bomComponentDisplayPanel");
@@ -151,7 +170,8 @@ public class BomUpdateController extends BaseManagedBean implements
 		updateOperation = null;
 		newCurrStatus = null;
 		newBomStatus = null;
-		FacesUtility.removeSessionMapValue("tableOperBrowseBean_currentBrowseComponentId");
+		FacesUtility
+				.removeSessionMapValue("tableOperBrowseBean_currentBrowseComponentId");
 		FacesUtility.removeSessionMapValue("copyOperBrowseBean_OPERATION");
 		UIComponent tablePanel2 = findComponent(FacesUtility.getFacesContext()
 				.getViewRoot(), "bomUpdateForm:updatePanel");
@@ -167,29 +187,30 @@ public class BomUpdateController extends BaseManagedBean implements
 	}
 
 	public void copyToAll() {
-		//String operation = null;
-		//operation= (String) FacesUtility
-				//.getSessionMapValue("copyOperBrowseBean_OPERATION");
+		// String operation = null;
+		// operation= (String) FacesUtility
+		// .getSessionMapValue("copyOperBrowseBean_OPERATION");
 		getUpdateOperation();
 		if (bomComponentList.size() > 0) {
 			for (BomComponentItem row : bomComponentList) {
-			//	if (operation!=null){
-				if (!(updateOperation==null)){
-				row.setNewoperation(updateOperation);
-				UIComponent tablePanel1 = findComponent(FacesUtility
-						.getFacesContext().getViewRoot(),
-						"bomUpdateForm:bomComponentDisplayPanel");
-				if (tablePanel1 != null) {
-					FacesUtility.addControlUpdate(tablePanel1);
-				}
+				// if (operation!=null){
+				if (!(updateOperation == null)) {
+					row.setNewoperation(updateOperation);
+					UIComponent tablePanel1 = findComponent(FacesUtility
+							.getFacesContext().getViewRoot(),
+							"bomUpdateForm:bomComponentDisplayPanel");
+					if (tablePanel1 != null) {
+						FacesUtility.addControlUpdate(tablePanel1);
+					}
 				} else {
-					//	row.setNewoperation(this.updateOperation);
-					message = FacesUtility.getLocaleSpecificText("Enter a operation in the new operation field");
+					// row.setNewoperation(this.updateOperation);
+					message = FacesUtility
+							.getLocaleSpecificText("Enter a operation in the new operation field");
 					setMessageBar(true, LSMessageType.ERROR);
 					return;
 				}
 			}
-			
+
 		}
 	}
 
@@ -218,7 +239,7 @@ public class BomUpdateController extends BaseManagedBean implements
 			tableBomConfigBean.setMultiSelectType(false);
 			tableBomConfigBean.setSelectionBehavior("server");
 			// enable row double click
-			//tableBomConfigBean.setDoubleClick(true);
+			// tableBomConfigBean.setDoubleClick(true);
 			tableBomConfigBean.addInternalTableSelectionEventListener(this);
 			tableBomConfigBean.configureTable();
 		}
@@ -272,8 +293,9 @@ public class BomUpdateController extends BaseManagedBean implements
 		String bomRef = null;
 		String bom = null;
 		String rev = null;
-		if (selList.size()==0){
-			message = FacesUtility.getLocaleSpecificText("Please select a BOM to delete");
+		if (selList.size() == 0) {
+			message = FacesUtility
+					.getLocaleSpecificText("Please select a BOM to delete");
 			setMessageBar(true, LSMessageType.INFO);
 			return;
 		}
@@ -322,9 +344,9 @@ public class BomUpdateController extends BaseManagedBean implements
 						.getComponentRef());
 				ItemKeyData itemKeyData = itemConfigurationService
 						.findItemKeyDataByRef(itemObjRef);
-				String component =itemKeyData.getItem();
+				String component = itemKeyData.getItem();
 				String version = itemKeyData.getRevision();
-				String combined = component+"/"+version;
+				String combined = component + "/" + version;
 				bomCompItemRow.setComponent(combined);
 				if (collRow.getOperationRef() != null) {
 					ObjectReference itemOprRef = new ObjectReference(collRow
@@ -337,7 +359,7 @@ public class BomUpdateController extends BaseManagedBean implements
 				} else {
 					bomCompItemRow.setAssyoperation("");
 				}
-				
+
 				bomCompItemRow.setNewoperation("");
 				bomCompItemRow.setAssySequence(collRow.getSequence());
 				bomCompItemRow.setAssyQty(collRow.getQuantity().toString());
@@ -372,8 +394,9 @@ public class BomUpdateController extends BaseManagedBean implements
 		String bomRef = null;
 		String bom = null;
 		String rev = null;
-		if (selList.size()==0 || bomComponentList.size() == 0) {
-			message = FacesUtility.getLocaleSpecificText("Please select a BOM to update");
+		if (selList.size() == 0 || bomComponentList.size() == 0) {
+			message = FacesUtility
+					.getLocaleSpecificText("Please select a BOM to update");
 			setMessageBar(true, LSMessageType.INFO);
 			return;
 		}
@@ -386,79 +409,79 @@ public class BomUpdateController extends BaseManagedBean implements
 		for (BomComponentItem bomCompRow : bomComponentList) {
 			String sequence = bomCompRow.getAssySequence().toString();
 			String newOperation = bomCompRow.getNewoperation();
-			if (!newOperation.equals("")){
-			OperationSearchRequest opSearchReq = new OperationSearchRequest();
-			opSearchReq.setOperation(newOperation);
-			OperationSearchResult opSearchResult = operationConfigurationService
-					.findOperationConfiguration(opSearchReq);
-			List<OperationExtendedConfiguration> opSearchList = new ArrayList<OperationExtendedConfiguration>();
-			opSearchList = opSearchResult.getOperationList();
-			if (opSearchList.size() == 0) {
-				message = FacesUtility.getLocaleSpecificText("Operation "
-						+ newOperation + "is invalid");
-				setMessageBar(true, LSMessageType.ERROR);
-				return;
-			}
-			String newOperRef = null;
-			for (OperationExtendedConfiguration opRow : opSearchList) {
-				if (opRow.isCurrentRevision() == true
-						&& opRow.getOperation().equals(
-								bomCompRow.getNewoperation())) {
-					newOperRef = opRow.getRef().toString();
-				}
-			}
-			
-			String currOpRefHash = newOperRef.substring(0, newOperRef
-					.lastIndexOf(",") + 1)
-					+ "#";
-			if (!bomCompRow.getAssyoperation().equals("")) {
-				// update operation for each component
-				PreparedStatement pOpstmt;
-				String updateOpStmt = "update BOM_OPERATION set OPERATION_BO = '"
-						+ currOpRefHash
-						+ "' where BOM_COMPONENT_BO = (select HANDLE from BOM_COMPONENT where BOM_BO = '"
-						+ bomRef + "' and SEQUENCE = '" + sequence + "')";
-				pOpstmt = connect.prepareStatement(updateOpStmt);
-				pOpstmt.executeUpdate();
-			} else {
-				PreparedStatement pstmt1;
-				String bomComRef = null;
-				String selBomComRef = null;
-				String quantity = bomCompRow.getAssyQty();
-				selBomComRef = ("select HANDLE from BOM_COMPONENT where BOM_BO = '"
-						+ bomRef + "' and SEQUENCE = '" + sequence + "'");
-				pstmt1 = connect.prepareStatement(selBomComRef);
-				pstmt1.executeQuery();
-				ResultSet rs = pstmt1.getResultSet();
-				while (rs.next()) {
-					bomComRef = rs.getString("HANDLE");
-				}
-				if (bomComRef != null) {
-					String insertHandle = "BOMOperationBO:" + bomComRef + ","
-							+ currOpRefHash;
-					try {
-						String insertStmnt = "INSERT into BOM_OPERATION values ('"
-								+ insertHandle
-								+ "','"
-								+ bomComRef
-								+ "','"
-								+ currOpRefHash + "','" + quantity + "')";
-						PreparedStatement pstmt2 = connect
-								.prepareStatement(insertStmnt);
-						pstmt2.executeUpdate();
-					} catch (Exception ex) {
-						message = FacesUtility
-								.getLocaleSpecificText("Error while insert assemebly operations.Contact Developer");
-						setMessageBar(true, LSMessageType.ERROR);
-						return;
-					}
-				} else {
-					message = FacesUtility
-							.getLocaleSpecificText("Bom Component Reference is not valid.Contact Developer");
+			if (!newOperation.equals("")) {
+				OperationSearchRequest opSearchReq = new OperationSearchRequest();
+				opSearchReq.setOperation(newOperation);
+				OperationSearchResult opSearchResult = operationConfigurationService
+						.findOperationConfiguration(opSearchReq);
+				List<OperationExtendedConfiguration> opSearchList = new ArrayList<OperationExtendedConfiguration>();
+				opSearchList = opSearchResult.getOperationList();
+				if (opSearchList.size() == 0) {
+					message = FacesUtility.getLocaleSpecificText("Operation "
+							+ newOperation + "is invalid");
 					setMessageBar(true, LSMessageType.ERROR);
 					return;
 				}
-			}
+				String newOperRef = null;
+				for (OperationExtendedConfiguration opRow : opSearchList) {
+					if (opRow.isCurrentRevision() == true
+							&& opRow.getOperation().equals(
+									bomCompRow.getNewoperation())) {
+						newOperRef = opRow.getRef().toString();
+					}
+				}
+
+				String currOpRefHash = newOperRef.substring(0, newOperRef
+						.lastIndexOf(",") + 1)
+						+ "#";
+				if (!bomCompRow.getAssyoperation().equals("")) {
+					// update operation for each component
+					PreparedStatement pOpstmt;
+					String updateOpStmt = "update BOM_OPERATION set OPERATION_BO = '"
+							+ currOpRefHash
+							+ "' where BOM_COMPONENT_BO = (select HANDLE from BOM_COMPONENT where BOM_BO = '"
+							+ bomRef + "' and SEQUENCE = '" + sequence + "')";
+					pOpstmt = connect.prepareStatement(updateOpStmt);
+					pOpstmt.executeUpdate();
+				} else {
+					PreparedStatement pstmt1;
+					String bomComRef = null;
+					String selBomComRef = null;
+					String quantity = bomCompRow.getAssyQty();
+					selBomComRef = ("select HANDLE from BOM_COMPONENT where BOM_BO = '"
+							+ bomRef + "' and SEQUENCE = '" + sequence + "'");
+					pstmt1 = connect.prepareStatement(selBomComRef);
+					pstmt1.executeQuery();
+					ResultSet rs = pstmt1.getResultSet();
+					while (rs.next()) {
+						bomComRef = rs.getString("HANDLE");
+					}
+					if (bomComRef != null) {
+						String insertHandle = "BOMOperationBO:" + bomComRef
+								+ "," + currOpRefHash;
+						try {
+							String insertStmnt = "INSERT into BOM_OPERATION values ('"
+									+ insertHandle
+									+ "','"
+									+ bomComRef
+									+ "','"
+									+ currOpRefHash + "','" + quantity + "')";
+							PreparedStatement pstmt2 = connect
+									.prepareStatement(insertStmnt);
+							pstmt2.executeUpdate();
+						} catch (Exception ex) {
+							message = FacesUtility
+									.getLocaleSpecificText("Error while insert assemebly operations.Contact Developer");
+							setMessageBar(true, LSMessageType.ERROR);
+							return;
+						}
+					} else {
+						message = FacesUtility
+								.getLocaleSpecificText("Bom Component Reference is not valid.Contact Developer");
+						setMessageBar(true, LSMessageType.ERROR);
+						return;
+					}
+				}
 			}
 		}
 
@@ -480,10 +503,10 @@ public class BomUpdateController extends BaseManagedBean implements
 				currVerCount = rs.getString("COUNT");
 			}
 			if (!currVerCount.equals("0")) {
-			String updateStmnt = "UPDATE BOM set CURRENT_REVISION = 'false' where handle = (select HANDLE from BOM where BOM = '"
-					+ bom + "' and CURRENT_REVISION = 'true')";
-			pstmt = connect.prepareStatement(updateStmnt);
-			pstmt.executeUpdate();
+				String updateStmnt = "UPDATE BOM set CURRENT_REVISION = 'false' where handle = (select HANDLE from BOM where BOM = '"
+						+ bom + "' and CURRENT_REVISION = 'true')";
+				pstmt = connect.prepareStatement(updateStmnt);
+				pstmt.executeUpdate();
 			}
 			updateStatus = "Update BOM set STATUS_BO = 'StatusBO:0536,201',CURRENT_REVISION = 'true' where HANDLE =  '"
 					+ bomRef + "'";
@@ -585,12 +608,24 @@ public class BomUpdateController extends BaseManagedBean implements
 	public void processAction(ActionEvent event)
 			throws AbortProcessingException {
 		// TODO Auto-generated method stub
-		UICommandInputText currentBrowseComponent = (UICommandInputText) event.getSource();
-    	String currentBrowseComponentId = currentBrowseComponent.getClientId(FacesContext.getCurrentInstance());
+		UICommandInputText currentBrowseComponent = (UICommandInputText) event
+				.getSource();
+		String currentBrowseComponentId = currentBrowseComponent
+				.getClientId(FacesContext.getCurrentInstance());
 		FacesUtility.removeSessionMapValue("tableOperBrowseBean");
-		FacesUtility.setSessionMapValue("tableOperBrowseBean_currentBrowseComponentId", currentBrowseComponentId);
+		FacesUtility.setSessionMapValue(
+				"tableOperBrowseBean_currentBrowseComponentId",
+				currentBrowseComponentId);
 		FacesUtility.addScriptCommand("window.opentableOperationBrowse();");
 
+	}
+
+	public String getBomFilter() {
+		return bomFilter;
+	}
+
+	public void setBomFilter(String bomFilter) {
+		this.bomFilter = bomFilter;
 	}
 
 	public String getNewBomStatus() {
@@ -627,7 +662,7 @@ public class BomUpdateController extends BaseManagedBean implements
 				e.printStackTrace();
 			}
 		}
-		
+
 	}
 
 }
